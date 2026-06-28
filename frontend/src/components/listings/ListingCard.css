@@ -1,0 +1,185 @@
+/* ===================================================
+   ListingCard.css — Mobile‑first (base = small screen)
+   =================================================== */
+
+/* ── Card container ────────────────────────────── */
+.listing-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #e8e7e4;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(44, 44, 42, 0.07);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  
+  .listing-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(44, 44, 42, 0.12);
+  }
+  
+  /* ── Image container ───────────────────────────── */
+  .listing-card__image {
+    height: 160px;
+    background: #2c2c2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .listing-card__image-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .listing-card__placeholder {
+    font-size: 48px;
+  }
+  
+  /* ── Status badge ──────────────────────────────── */
+  .listing-card__status-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--badge-bg, #f0f0ee);
+    color: var(--badge-color, #888780);
+  }
+  
+  .listing-card__status-badge--active {
+    --badge-bg: #eaf3de;
+    --badge-color: #3b6d11;
+  }
+  
+  .listing-card__status-badge--sold {
+    --badge-bg: #fcebeb;
+    --badge-color: #a32d2d;
+  }
+  
+  .listing-card__status-badge--paused {
+    --badge-bg: #f0f0ee;
+    --badge-color: #888780;
+  }
+  
+  /* ── Body ──────────────────────────────────────── */
+  .listing-card__body {
+    padding: 0.9rem;
+  }
+  
+  /* ── Title ─────────────────────────────────────── */
+  .listing-card__title {
+    font-weight: 500;
+    font-size: 14px;               /* comfortable on all phones */
+    margin-bottom: 4px;
+    color: #2c2c2a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* ── Price row ─────────────────────────────────── */
+  .listing-card__price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .listing-card__price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;               /* slightly smaller for tiny screens */
+    color: #2c2c2a;
+  }
+  
+  .listing-card__price-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: #888780;
+  }
+  
+  .listing-card__quantity {
+    font-size: 12px;
+    color: #888780;
+  }
+  
+  /* ── Location & trust ──────────────────────────── */
+  .listing-card__info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .listing-card__location {
+    font-size: 12px;
+    color: #888780;
+  }
+  
+  .listing-card__trust-badge {
+    font-size: 11px;
+    background: #eaf3de;
+    color: #3b6d11;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  
+  /* ── Action buttons (seller only) ──────────────── */
+  .listing-card__actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  
+  .listing-card__action-btn {
+    flex: 1;
+    padding: 5px 0;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--btn-bg, #f0f0ee);
+    color: var(--btn-color, #888780);
+  }
+  
+  .listing-card__action-btn--small {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+  }
+  
+  .listing-card__action-btn--sold {
+    --btn-bg: #fcebeb;
+    --btn-color: #a32d2d;
+  }
+  
+  .listing-card__action-btn--relist {
+    --btn-bg: #eaf3de;
+    --btn-color: #3b6d11;
+  }
+  
+  .listing-card__action-btn--pause {
+    --btn-bg: #f0f0ee;
+    --btn-color: #888780;
+  }
+  
+  .listing-card__action-btn--delete {
+    --btn-bg: #fcebeb;
+    --btn-color: #a32d2d;
+  }
+  
+  /* ── Optional: scale up slightly on larger phones / tablets ── */
+  @media (min-width: 400px) {
+    .listing-card__price {
+      font-size: 20px;
+    }
+    .listing-card__title {
+      font-size: 14px;        /* (unchanged, just for symmetry) */
+    }
+  }

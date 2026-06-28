@@ -1,235 +1,170 @@
 /* ===================================================
-   BrowsePage.css — External styles for Browse listings
-   Uses global CSS variables (--cream, --coal, --ember,
-   --ash, --border, --white, etc.)
+   CreateListingPage.css — Mobile‑first version
+   Base: small phones (< 480px)
+   Enhancements: tablets / desktops (>= 480px)
    =================================================== */
 
-/* ── Page layout ─────────────────────────────────── */
-.browse-page {
+/* ── Container ─────────────────────────────────── */
+.create-listing-container {
     min-height: 100vh;
     background: var(--cream);
   }
   
-  .browse-content {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 1.5rem;
-  }
-  
-  /* ── Navbar ──────────────────────────────────────── */
-  .browse-nav {
+  /* ── Navigation ────────────────────────────────── */
+  .create-listing-nav {
     background: var(--coal);
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
   }
   
-  .browse-nav__logo {
+  @media (min-width: 480px) {
+    .create-listing-nav {
+      padding: 1rem 1.5rem;
+      gap: 12px;
+    }
+  }
+  
+  /* Reuse global nav-back-btn if defined in index.css;
+     otherwise define here */
+  .nav-back-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: opacity 0.15s ease;
+  }
+  
+  @media (min-width: 480px) {
+    .nav-back-btn {
+      font-size: 20px;
+    }
+  }
+  
+  .nav-back-btn:hover {
+    opacity: 0.7;
+  }
+  
+  .nav-title {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
     color: white;
-    font-size: 20px;
-    cursor: pointer;
-  }
-  
-  .browse-nav__dot {
-    color: var(--ember);
-  }
-  
-  .browse-nav__count {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.5);
-  }
-  
-  /* ── Search form ─────────────────────────────────── */
-  .search-form {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 1rem;
-  }
-  
-  .search-input {
+    font-size: 16px;
     flex: 1;
   }
   
-  .search-btn {
-    width: auto;
-    padding: 11px 16px;
+  @media (min-width: 480px) {
+    .nav-title {
+      font-size: 18px;
+    }
   }
   
-  /* ── Filter toggle & clear buttons ──────────────── */
-  .filter-toggle-btn {
-    width: auto;
-    padding: 11px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: white;
-    color: var(--coal);
-    cursor: pointer;
-    font-size: 13px;
-    transition: background 0.15s, color 0.15s;
-  }
-  
-  .filter-toggle-btn--active {
-    background: var(--coal);
+  .voice-toggle-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
-  }
-  
-  .clear-filters-btn {
-    width: auto;
-    padding: 11px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: white;
+    padding: 6px 12px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s;
   }
   
-  /* ── Filter panel ────────────────────────────────── */
-  .filter-panel {
-    margin-bottom: 1rem;
+  .voice-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .voice-toggle-active {
+    background: var(--ember);
+    border-color: var(--ember);
+  }
+  
+  @media (min-width: 480px) {
+    .voice-toggle-btn {
+      padding: 7px 16px;
+      font-size: 13px;
+    }
+  }
+  
+  /* ── Content Area ──────────────────────────────── */
+  .create-listing-content {
     padding: 1rem;
   }
   
-  .filter-panel__title {
-    font-size: 12px;
-    color: var(--ash);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 10px;
+  @media (min-width: 480px) {
+    .create-listing-content {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
   }
   
-  .filter-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-  }
-  
-  /* ── Neighbourhood pills ────────────────────────── */
-  .neighbourhood-pills {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 4px;
+  /* ── Voice input panel ─────────────────────────── */
+  .voice-input-panel {
     margin-bottom: 1rem;
-    scrollbar-width: none;
   }
   
-  .neighbourhood-pills::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .neighbourhood-pill {
-    padding: 5px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: white;
-    color: var(--ash);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  
-  .neighbourhood-pill--active {
-    border: none;
-    background: var(--coal);
-    color: white;
-  }
-  
-  /* ── Results summary ─────────────────────────────── */
-  .results-summary {
+  /* ── Voice result banner ───────────────────────── */
+  .voice-result-banner {
+    background: var(--green-light);
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    animation: fadeIn 0.3s ease;
   }
   
-  .results-summary__text {
+  .voice-result-text {
     font-size: 13px;
-    color: var(--ash);
+    color: var(--green);
+    margin: 0;
+    flex: 1;
   }
   
-  .results-summary__sort {
-    font-size: 12px;
-    color: var(--ash);
+  .voice-result-dismiss {
+    background: none;
+    border: none;
+    color: var(--green);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 0 0 8px;
+    line-height: 1;
   }
   
-  /* ── Listing grid (shared by real cards & skeletons) */
-  .listing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 14px;
+  /* ── Form card ─────────────────────────────────── */
+  .listing-form-card {
+    /* additional spacing if needed */
   }
   
-  /* ── Skeleton loading cards ─────────────────────── */
-  .skeleton-card {
-    background: white;
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  
-  .skeleton-image {
-    height: 160px;
-    background: #F0EFE8;
-    animation: pulse 1.5s infinite;
-  }
-  
-  .skeleton-body {
-    padding: 0.9rem;
-  }
-  
-  .skeleton-line {
-    height: 14px;
-    background: #F0EFE8;
-    border-radius: 4px;
-    margin-bottom: 8px;
-  }
-  
-  .skeleton-line--short {
-    width: 60%;
-    height: 20px;
-  }
-  
-  /* ── Empty state ─────────────────────────────────── */
-  .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-  }
-  
-  .empty-state__icon {
-    font-size: 48px;
-    margin-bottom: 12px;
-  }
-  
-  .empty-state__title {
-    margin-bottom: 8px;
+  .form-title {
+    font-size: 18px;
+    margin-bottom: 4px;
     color: var(--coal);
   }
   
-  .empty-state__message {
+  @media (min-width: 480px) {
+    .form-title {
+      font-size: 20px;
+    }
+  }
+  
+  .form-subtitle {
     color: var(--ash);
-    font-size: 14px;
-    margin: 0 0 1rem;
+    font-size: 13px;
+    margin-bottom: 1.25rem;
   }
   
-  /* ── Load more ───────────────────────────────────── */
-  .load-more-container {
-    text-align: center;
-    margin-top: 1.5rem;
-  }
-  
-  .load-more-btn {
-    width: auto;
-    padding: 10px 28px;
-  }
-  
-  /* ── Animations ──────────────────────────────────── */
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+  /* ── Animations ────────────────────────────────── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }

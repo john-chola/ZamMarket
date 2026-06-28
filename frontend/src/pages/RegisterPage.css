@@ -1,408 +1,414 @@
-/* ===== CSS Custom Properties ===== */
+/* ===================================================
+   RegisterPage.css — Mobile‑first version
+   Base: small phones (<480px)
+   Enhancements: tablets / desktops (>= 480px)
+   =================================================== */
+
+/* ── CSS Custom Properties ───────────────────────── */
 :root {
-    --coal: #1a1a1a;
-    --ash: #6b7280;
-    --ember: #ef4444;
-    --ember-light: #fef2f2;
-    --ember-dark: #dc2626;
-    --snow: #ffffff;
-    --smoke: #f3f4f6;
-    --border: #e5e7eb;
-    --focus-ring: rgba(239, 68, 68, 0.3);
-    --radius: 8px;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  }
-  
-  /* ===== Layout Container ===== */
-  .register-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, var(--smoke) 0%, var(--snow) 100%);
-  }
-  
-  .register-wrapper {
-    width: 100%;
-    max-width: 420px;
-  }
-  
-  /* ===== Header Section ===== */
-  .register-header {
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
-  
+  --coal: #1a1a1a;
+  --ash: #6b7280;
+  --ember: #ef4444;
+  --ember-light: #fef2f2;
+  --ember-dark: #dc2626;
+  --snow: #ffffff;
+  --smoke: #f3f4f6;
+  --border: #e5e7eb;
+  --focus-ring: rgba(239, 68, 68, 0.3);
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Layout Container ────────────────────────────── */
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--smoke) 0%, var(--snow) 100%);
+}
+
+.register-wrapper {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Header Section ──────────────────────────────── */
+.register-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.register-logo {
+  font-size: 22px;               /* small screen default */
+  color: var(--coal);
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+@media (min-width: 480px) {
   .register-logo {
     font-size: 26px;
-    color: var(--coal);
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: -0.5px;
   }
-  
-  .logo-dot {
-    color: var(--ember);
-  }
-  
-  .register-subtitle {
-    color: var(--ash);
-    font-size: 14px;
-    margin-top: 4px;
-  }
-  
-  /* ===== Card Component ===== */
+}
+
+.logo-dot {
+  color: var(--ember);
+}
+
+.register-subtitle {
+  color: var(--ash);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ── Card Component ──────────────────────────────── */
+.card {
+  background: var(--snow);
+  border-radius: 12px;
+  padding: 1.5rem;                /* small screen default */
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+@media (min-width: 480px) {
   .card {
-    background: var(--snow);
-    border-radius: 12px;
     padding: 2rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
   }
-  
-  /* ===== Step Progress Bar ===== */
-  .step-bar {
-    display: flex;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-  
-  .step-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-  }
-  
-  .step-circle {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-  
-  .step-circle.active {
-    background: var(--ember);
-    color: white;
-    box-shadow: 0 0 0 3px var(--focus-ring);
-  }
-  
-  .step-circle.completed {
-    background: var(--ember);
-    color: white;
-  }
-  
-  .step-circle.pending {
-    background: var(--border);
-    color: var(--ash);
-  }
-  
-  .step-label {
-    font-size: 11px;
-    margin-top: 4px;
-    font-weight: 500;
-    transition: color 0.3s ease;
-  }
-  
-  .step-label.active {
-    color: var(--ember);
-  }
-  
-  .step-label.inactive {
-    color: var(--ash);
-  }
-  
-  .step-connector {
-    flex: 2;
-    height: 2px;
-    margin-bottom: 20px;
-    transition: background 0.3s ease;
-  }
-  
-  .step-connector.completed {
-    background: var(--ember);
-  }
-  
-  .step-connector.pending {
-    background: var(--border);
-  }
-  
-  /* ===== Error Message ===== */
-  .error-msg {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #dc2626;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius);
-    margin-bottom: 1.25rem;
-    font-size: 14px;
-    font-weight: 500;
-    animation: slideDown 0.3s ease;
-  }
-  
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  /* ===== Form Elements ===== */
-  .form-group {
-    margin-bottom: 1.25rem;
-  }
-  
-  .form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--coal);
-  }
-  
+}
+
+/* ── Step Progress Bar ───────────────────────────── */
+.step-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.step-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.step-circle.active {
+  background: var(--ember);
+  color: white;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.step-circle.completed {
+  background: var(--ember);
+  color: white;
+}
+
+.step-circle.pending {
+  background: var(--border);
+  color: var(--ash);
+}
+
+.step-label {
+  font-size: 11px;
+  margin-top: 4px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.step-label.active {
+  color: var(--ember);
+}
+
+.step-label.inactive {
+  color: var(--ash);
+}
+
+.step-connector {
+  flex: 2;
+  height: 2px;
+  margin-bottom: 20px;
+  transition: background 0.3s ease;
+}
+
+.step-connector.completed {
+  background: var(--ember);
+}
+
+.step-connector.pending {
+  background: var(--border);
+}
+
+/* ── Error Message ───────────────────────────────── */
+.error-msg {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Form Elements ───────────────────────────────── */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--coal);
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="password"],
+select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 14px;               /* small screen default */
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--snow);
+  color: var(--coal);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
+  font-family: inherit;
+}
+
+@media (min-width: 480px) {
   input[type="text"],
   input[type="tel"],
   input[type="password"],
   select {
-    width: 100%;
-    padding: 0.75rem 1rem;
     font-size: 15px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--snow);
-    color: var(--coal);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    box-sizing: border-box;
-    outline: none;
-    font-family: inherit;
   }
-  
-  input:focus,
-  select:focus {
-    border-color: var(--ember);
-    box-shadow: 0 0 0 3px var(--focus-ring);
-  }
-  
-  input::placeholder {
-    color: #9ca3af;
-  }
-  
-  /* Select styling */
-  select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    padding-right: 2.5rem;
-    cursor: pointer;
-  }
-  
-  /* OTP input specific */
+}
+
+input:focus,
+select:focus {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+input::placeholder {
+  color: #9ca3af;
+}
+
+/* Select styling */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* OTP input specific */
+.otp-input {
+  letter-spacing: 0.3em;
+  font-size: 18px !important;    /* small screen default */
+  text-align: center;
+  font-weight: 600;
+}
+
+@media (min-width: 480px) {
   .otp-input {
-    letter-spacing: 0.3em;
     font-size: 22px !important;
-    text-align: center;
-    font-weight: 600;
   }
-  
-  /* Helper text */
-  .phone-error {
-    color: var(--ember);
-    font-size: 12px;
-    margin-top: 4px;
-  }
-  
-  .helper-text {
-    font-size: 12px;
-    color: var(--ash);
-    margin-top: 4px;
-  }
-  
-  .dev-hint {
-    font-size: 12px;
-    color: var(--ash);
-    margin-top: 6px;
-    background: #fffbeb;
-    padding: 8px 10px;
-    border-radius: 6px;
-    border: 1px solid #fde68a;
-  }
-  
-  /* ===== Role Selector ===== */
+}
+
+/* Helper text */
+.phone-error {
+  color: var(--ember);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.helper-text {
+  font-size: 12px;
+  color: var(--ash);
+  margin-top: 4px;
+}
+
+.dev-hint {
+  font-size: 12px;
+  color: var(--ash);
+  margin-top: 6px;
+  background: #fffbeb;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #fde68a;
+}
+
+/* ── Role Selector ───────────────────────────────── */
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;                      /* small screen default */
+}
+
+@media (min-width: 480px) {
   .role-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  
+}
+
+.role-btn {
+  padding: 8px 0;                /* small screen default */
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+@media (min-width: 480px) {
   .role-btn {
     padding: 10px 0;
-    border-radius: var(--radius);
-    font-weight: 500;
-    cursor: pointer;
     font-size: 14px;
-    transition: all 0.2s ease;
-    font-family: inherit;
   }
-  
-  .role-btn.active {
-    border: 2px solid var(--ember);
-    background: var(--ember-light);
-    color: var(--ember-dark);
-  }
-  
-  .role-btn.inactive {
-    border: 1px solid var(--border);
-    background: var(--snow);
-    color: var(--ash);
-  }
-  
-  .role-btn.inactive:hover {
-    border-color: var(--ash);
-    background: var(--smoke);
-  }
-  
-  /* ===== Buttons ===== */
+}
+
+.role-btn.active {
+  border: 2px solid var(--ember);
+  background: var(--ember-light);
+  color: var(--ember-dark);
+}
+
+.role-btn.inactive {
+  border: 1px solid var(--border);
+  background: var(--snow);
+  color: var(--ash);
+}
+
+.role-btn.inactive:hover {
+  border-color: var(--ash);
+  background: var(--smoke);
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-size: 14px;               /* small screen default */
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+@media (min-width: 480px) {
   .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 0.75rem 1.5rem;
     font-size: 15px;
-    font-weight: 600;
-    border: none;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    line-height: 1.5;
-    font-family: inherit;
   }
-  
-  .btn-ember {
-    background: var(--ember);
-    color: var(--snow);
-  }
-  
-  .btn-ember:hover:not(:disabled) {
-    background: var(--ember-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
-  }
-  
-  .btn-ember:active:not(:disabled) {
-    transform: translateY(0);
-  }
-  
-  .btn-ember:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  .btn-outline {
-    background: transparent;
-    color: var(--ash);
-    border: 1px solid var(--border);
-    margin-top: 8px;
-  }
-  
-  .btn-outline:hover {
-    background: var(--smoke);
-    border-color: var(--ash);
-    color: var(--coal);
-  }
-  
-  /* ===== Spinner ===== */
-  .spinner {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: var(--snow);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  /* ===== Footer Link ===== */
-  .register-footer {
-    text-align: center;
-    margin-top: 1rem;
-    font-size: 14px;
-    color: var(--ash);
-  }
-  
-  .register-link {
-    color: var(--ember);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-  }
-  
-  .register-link:hover {
-    color: var(--ember-dark);
-    text-decoration: underline;
-  }
-  
-  /* ===== Animations ===== */
-  .form-step-enter {
-    animation: fadeIn 0.3s ease;
-  }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  
-  /* ===== Responsive Adjustments ===== */
-  @media (max-width: 480px) {
-    .card {
-      padding: 1.5rem;
-    }
-    
-    .register-logo {
-      font-size: 22px;
-    }
-    
-    .otp-input {
-      font-size: 18px !important;
-    }
-    
-    .role-selector {
-      gap: 6px;
-    }
-    
-    .role-btn {
-      font-size: 13px;
-      padding: 8px 0;
-    }
-    
-    input[type="text"],
-    input[type="tel"],
-    input[type="password"],
-    select,
-    .btn {
-      font-size: 14px;
-    }
-  }
+}
+
+.btn-ember {
+  background: var(--ember);
+  color: var(--snow);
+}
+
+.btn-ember:hover:not(:disabled) {
+  background: var(--ember-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+}
+
+.btn-ember:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-ember:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--ash);
+  border: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.btn-outline:hover {
+  background: var(--smoke);
+  border-color: var(--ash);
+  color: var(--coal);
+}
+
+/* ── Spinner ─────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--snow);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer Link ─────────────────────────────────── */
+.register-footer {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 14px;
+  color: var(--ash);
+}
+
+.register-link {
+  color: var(--ember);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.register-link:hover {
+  color: var(--ember-dark);
+  text-decoration: underline;
+}
+
+/* ── Animations ──────────────────────────────────── */
+.form-step-enter {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}

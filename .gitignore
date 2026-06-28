@@ -1,8 +1,21 @@
+# Dependencies
 node_modules/
+
+# Environment variables — NEVER commit these
 .env
-.DS_Store
-build/
+backend/.env
+frontend/.env
+
+# Build output
 dist/
+build/
+
+# Logs
 *.log
-.vercel
-.render
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vite cache
+.vite/

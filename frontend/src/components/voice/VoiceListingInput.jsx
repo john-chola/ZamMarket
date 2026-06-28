@@ -18,23 +18,57 @@ const KEYWORD_MAP = {
 };
 
 const applyKeywordMap = (transcript) => {
-  let result = transcript.toLowerCase();
+  let result = transcript.toLowerCase().trim();
   Object.entries(KEYWORD_MAP).forEach(([local, english]) => {
     result = result.replace(new RegExp(`\\b${local}\\b`, 'gi'), english);
   });
-  return result;
+  return result.replace(/\s+/g, ' ');
 };
 
 // Try to extract price from transcript
 const extractPrice = (text) => {
-  const match = text.match(/(?:K|kwacha)?\s*(\d+)/i);
-  return match ? match[1] : '';
+  const patterns = [
+    /K\s*(\d+)/i,
+    /(\d+)\s*K(?:\s|$)/i,
+    /kwacha\s*(\d+)/i,
+    /(\d+)\s*kwacha/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return match[1];
+  }
+  return '';
 };
 
 // Try to extract quantity from transcript
 const extractQuantity = (text) => {
-  const match = text.match(/(\d+)\s*(?:bag|tin|kg|amasaka)/i);
-  return match ? match[1] : '';
+  const patterns = [
+    /(\d+)\s*(?:bags?|tins?|kg)/i,
+    /(\d+)\s*(?:amasaka|umufuko|tini)/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return match[1];
+  }
+  return '';
+};
+
+// Extract title
+const extractTitle = (text) => {
+  if (text.includes('charcoal')) {
+    const charcoalIndex = text.indexOf('charcoal');
+    const start = Math.max(0, charcoalIndex - 20);
+    const end = Math.min(text.length, charcoalIndex + 50);
+    const context = text.substring(start, end).trim();
+    const cleaned = context.replace(/[0-9kbags,]/gi, '').trim();
+    if (cleaned.length > 3) return cleaned.substring(0, 60);
+    return 'Charcoal';
+  }
+  const words = text.split(/\s+/).filter(w => w.length > 2);
+  if (words.length > 0) {
+    return words.slice(0, 3).join(' ').substring(0, 60);
+  }
+  return '';
 };
 
 export default function VoiceListingInput({ onResult, onClose }) {
@@ -44,6 +78,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [supported, setSupported] = useState(true);
   const recognitionRef = useRef(null);
+  const lastTranscriptRef = useRef(''); // ✅ Track transcript separately
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -53,40 +88,41 @@ export default function VoiceListingInput({ onResult, onClose }) {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous      = false;
-    recognition.interimResults  = true;
-    recognition.lang            = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
     recognition.maxAlternatives = 3;
 
     recognition.onresult = (e) => {
       let interim = '';
-      let final   = '';
+      let final = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
         if (e.results[i].isFinal) final += t;
         else interim += t;
       }
-      setTranscript(final || interim);
+      const finalTranscript = final || interim;
+      lastTranscriptRef.current = finalTranscript; // ✅ Store in ref
+      setTranscript(finalTranscript);
     };
 
     recognition.onend = () => {
-      setPhase((prev) => {
-        if (prev === 'listening') {
-          // Process the final transcript
-          processTranscript();
-          return 'processing';
-        }
-        return prev;
-      });
+      // ✅ Use ref to get the actual transcript
+      if (lastTranscriptRef.current.trim()) {
+        processTranscript(lastTranscriptRef.current);
+      } else {
+        setErrorMsg('No speech detected. Please try again.');
+        setPhase('error');
+      }
     };
 
     recognition.onerror = (e) => {
       console.error('Speech error:', e.error);
       const msgs = {
-        'not-allowed':    'Microphone access denied. Please allow microphone in browser settings.',
-        'no-speech':      'No speech detected. Please try again.',
-        'network':        'Network error. Using text input instead.',
-        'aborted':        'Listening stopped.',
+        'not-allowed': 'Microphone access denied. Please allow microphone in browser settings.',
+        'no-speech': 'No speech detected. Please try again.',
+        'network': 'Network error. Using text input instead.',
+        'aborted': 'Listening stopped.',
       };
       setErrorMsg(msgs[e.error] || `Speech error: ${e.error}`);
       setPhase('error');
@@ -96,27 +132,29 @@ export default function VoiceListingInput({ onResult, onClose }) {
     return () => recognition.abort();
   }, []);
 
-  const processTranscript = () => {
+  // ✅ FIXED: Accept transcript as parameter instead of relying on state
+  const processTranscript = (finalTranscript) => {
     setPhase('processing');
+    
+    // Use small delay to ensure state updates are visible
     setTimeout(() => {
-      const mapped = applyKeywordMap(transcript);
+      const mapped = applyKeywordMap(finalTranscript);
       const result = {
-        rawTranscript:  transcript,
-        mappedText:     mapped,
-        suggestedTitle: mapped.length > 5
-          ? mapped.charAt(0).toUpperCase() + mapped.slice(1)
-          : '',
+        rawTranscript: finalTranscript,
+        mappedText: mapped,
+        suggestedTitle: extractTitle(mapped),
         suggestedPrice: extractPrice(mapped),
-        suggestedQty:   extractQuantity(mapped),
+        suggestedQty: extractQuantity(mapped),
       };
       setExtracted(result);
       setPhase('done');
-    }, 600);
+    }, 300);
   };
 
   const startListening = () => {
     if (!recognitionRef.current) return;
     setTranscript('');
+    lastTranscriptRef.current = ''; // ✅ Reset ref
     setExtracted({});
     setErrorMsg('');
     setPhase('listening');
@@ -128,19 +166,26 @@ export default function VoiceListingInput({ onResult, onClose }) {
   };
 
   const handleUse = () => {
-    onResult(extracted);
+    // Only send non-empty fields
+    const filtered = {
+      suggestedTitle: extracted.suggestedTitle || '',
+      suggestedPrice: extracted.suggestedPrice || '',
+      suggestedQty: extracted.suggestedQty || '',
+    };
+    onResult(filtered);
     onClose();
   };
 
   const handleRetry = () => {
     setPhase('idle');
     setTranscript('');
+    lastTranscriptRef.current = '';
     setExtracted({});
   };
 
   if (!supported) return (
     <div style={{ padding: '1.5rem', textAlign: 'center' }}>
-      <div style={{ fontSize: 36, marginBottom: 10 }}></div>
+      <div style={{ fontSize: 36, marginBottom: 10 }}>🎤</div>
       <p style={{ color: 'var(--ash)', fontSize: 14, marginBottom: 16 }}>
         Voice input is not supported in this browser. Please use Chrome or Edge.
       </p>
@@ -161,7 +206,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
 
       <p style={{ fontSize: 13, color: 'var(--ash)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
         Speak your listing in <strong>English, Nyanja, or Bemba</strong>.<br />
-        Example: <em>"charcoal, 10 bags, K95 each, kalundu"</em>
+        Example: <em>"charcoal, 10 bags, K95 each"</em>
       </p>
 
       {/* Mic button */}
@@ -177,7 +222,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
             }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-            
+            🎙️
           </button>
           <p style={{ fontSize: 12, color: 'var(--ash)', marginTop: 8 }}>Tap to speak</p>
         </div>
@@ -191,7 +236,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
               width: 80, height: 80, borderRadius: '50%',
               background: '#E24B4A', border: 'none', cursor: 'pointer', fontSize: 32,
               animation: 'pulse-mic 1s ease-in-out infinite',
-            }}></button>
+            }}>🎙️</button>
           <p style={{ fontSize: 12, color: 'var(--ember)', marginTop: 8, fontWeight: 500 }}>
             Listening... tap to stop
           </p>
@@ -219,7 +264,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
       )}
 
       {/* Results */}
-      {phase === 'done' && extracted.suggestedTitle && (
+      {phase === 'done' && (
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ background: 'var(--cream)', borderRadius: 10, padding: '1rem',
             marginBottom: 10 }}>
@@ -230,11 +275,12 @@ export default function VoiceListingInput({ onResult, onClose }) {
             </p>
           </div>
 
+          {/* Show detected fields */}
           <div style={{ display: 'grid', gap: 8 }}>
             {[
-              { label: 'Title detected', value: extracted.suggestedTitle },
+              extracted.suggestedTitle && { label: 'Title detected', value: extracted.suggestedTitle },
               extracted.suggestedPrice && { label: 'Price detected', value: `K${extracted.suggestedPrice}` },
-              extracted.suggestedQty   && { label: 'Quantity detected', value: extracted.suggestedQty },
+              extracted.suggestedQty && { label: 'Quantity detected', value: extracted.suggestedQty },
             ].filter(Boolean).map(({ label, value }) => (
               <div key={label} style={{ background: 'white', border: '1px solid var(--border)',
                 borderRadius: 8, padding: '10px 12px',
@@ -245,24 +291,23 @@ export default function VoiceListingInput({ onResult, onClose }) {
             ))}
           </div>
 
+          {/* Show partial match warning */}
+          {!extracted.suggestedTitle && (
+            <div style={{ background: '#FFF8E1', border: '1px solid #FFD54F', borderRadius: 8, padding: '10px 12px', marginTop: 8 }}>
+              <p style={{ fontSize: 12, color: '#F57F17' }}>
+                ℹ️ Could not fully extract details. Fill in the rest manually.
+              </p>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: 8, marginTop: '1rem' }}>
             <button onClick={handleUse} className="btn btn-ember" style={{ flex: 2 }}>
-               Use This
+              ✅ Use This
             </button>
             <button onClick={handleRetry} className="btn btn-outline" style={{ flex: 1 }}>
               Retry
             </button>
           </div>
-        </div>
-      )}
-
-      {phase === 'done' && !extracted.suggestedTitle && (
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--ash)', fontSize: 13, marginBottom: 12 }}>
-            Could not extract listing details. Please try again or type manually.
-          </p>
-          <button onClick={handleRetry} className="btn btn-outline"
-            style={{ width: 'auto', padding: '8px 20px' }}>Try Again</button>
         </div>
       )}
 
