@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import './VoiceListingInput.css';
 
 // ── Nyanja / Bemba keyword mappings ───────────────────────
 const KEYWORD_MAP = {
@@ -53,14 +54,19 @@ const extractQuantity = (text) => {
   return '';
 };
 
-// Extract title
+// Extract title - improved regex to preserve product names
 const extractTitle = (text) => {
   if (text.includes('charcoal')) {
     const charcoalIndex = text.indexOf('charcoal');
     const start = Math.max(0, charcoalIndex - 20);
     const end = Math.min(text.length, charcoalIndex + 50);
     const context = text.substring(start, end).trim();
-    const cleaned = context.replace(/[0-9kbags,]/gi, '').trim();
+    // Remove only: digits, 'bag'/'bags'/'tin'/'tins'/'kg', 'K', 'each', and commas
+    const cleaned = context
+      .replace(/\b(?:bags?|tins?|kg|K|each)\b/gi, '')
+      .replace(/\d+/g, '')
+      .replace(/[,]/g, '')
+      .trim();
     if (cleaned.length > 3) return cleaned.substring(0, 60);
     return 'Charcoal';
   }
@@ -71,14 +77,34 @@ const extractTitle = (text) => {
   return '';
 };
 
+// Extract neighbourhood/location from transcript
+const extractNeighbourhood = (text) => {
+  // Common Lusaka neighbourhoods
+  const neighbourhoods = [
+    'kalingalinga', 'kanyama', 'mtendere', 'chilenje',
+    'matero', 'bauleni', 'chelstone', 'woodlands',
+    'kabwata', 'libala', 'lusaka cbd', 'city center',
+  ];
+  
+  const lowerText = text.toLowerCase();
+  for (const neighbourhood of neighbourhoods) {
+    if (lowerText.includes(neighbourhood)) {
+      return neighbourhood.charAt(0).toUpperCase() + neighbourhood.slice(1);
+    }
+  }
+  
+  return '';
+};
+
 export default function VoiceListingInput({ onResult, onClose }) {
   const [phase, setPhase] = useState('idle'); // idle | listening | processing | done | error
+  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [transcript, setTranscript] = useState('');
   const [extracted, setExtracted] = useState({});
   const [errorMsg, setErrorMsg] = useState('');
   const [supported, setSupported] = useState(true);
   const recognitionRef = useRef(null);
-  const lastTranscriptRef = useRef(''); // ✅ Track transcript separately
+  const lastTranscriptRef = useRef('');
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -90,7 +116,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = 'en-US'; // Default, will be updated on start
     recognition.maxAlternatives = 3;
 
     recognition.onresult = (e) => {
@@ -102,12 +128,11 @@ export default function VoiceListingInput({ onResult, onClose }) {
         else interim += t;
       }
       const finalTranscript = final || interim;
-      lastTranscriptRef.current = finalTranscript; // ✅ Store in ref
+      lastTranscriptRef.current = finalTranscript;
       setTranscript(finalTranscript);
     };
 
     recognition.onend = () => {
-      // ✅ Use ref to get the actual transcript
       if (lastTranscriptRef.current.trim()) {
         processTranscript(lastTranscriptRef.current);
       } else {
@@ -121,7 +146,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
       const msgs = {
         'not-allowed': 'Microphone access denied. Please allow microphone in browser settings.',
         'no-speech': 'No speech detected. Please try again.',
-        'network': 'Network error. Using text input instead.',
+        'network': 'Network error. Please try again.',
         'aborted': 'Listening stopped.',
       };
       setErrorMsg(msgs[e.error] || `Speech error: ${e.error}`);
@@ -132,11 +157,9 @@ export default function VoiceListingInput({ onResult, onClose }) {
     return () => recognition.abort();
   }, []);
 
-  // ✅ FIXED: Accept transcript as parameter instead of relying on state
   const processTranscript = (finalTranscript) => {
     setPhase('processing');
     
-    // Use small delay to ensure state updates are visible
     setTimeout(() => {
       const mapped = applyKeywordMap(finalTranscript);
       const result = {
@@ -145,6 +168,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
         suggestedTitle: extractTitle(mapped),
         suggestedPrice: extractPrice(mapped),
         suggestedQty: extractQuantity(mapped),
+        suggestedNeighbourhood: extractNeighbourhood(mapped),
       };
       setExtracted(result);
       setPhase('done');
@@ -153,8 +177,12 @@ export default function VoiceListingInput({ onResult, onClose }) {
 
   const startListening = () => {
     if (!recognitionRef.current) return;
+    
+    // Set language before starting
+    recognitionRef.current.lang = selectedLanguage;
+    
     setTranscript('');
-    lastTranscriptRef.current = ''; // ✅ Reset ref
+    lastTranscriptRef.current = '';
     setExtracted({});
     setErrorMsg('');
     setPhase('listening');
@@ -166,11 +194,11 @@ export default function VoiceListingInput({ onResult, onClose }) {
   };
 
   const handleUse = () => {
-    // Only send non-empty fields
     const filtered = {
       suggestedTitle: extracted.suggestedTitle || '',
       suggestedPrice: extracted.suggestedPrice || '',
       suggestedQty: extracted.suggestedQty || '',
+      suggestedNeighbourhood: extracted.suggestedNeighbourhood || '',
     };
     onResult(filtered);
     onClose();
@@ -184,139 +212,126 @@ export default function VoiceListingInput({ onResult, onClose }) {
   };
 
   if (!supported) return (
-    <div style={{ padding: '1.5rem', textAlign: 'center' }}>
-      <div style={{ fontSize: 36, marginBottom: 10 }}>🎤</div>
-      <p style={{ color: 'var(--ash)', fontSize: 14, marginBottom: 16 }}>
+    <div className="voice-listing-unsupported">
+      <div className="voice-listing-unsupported-icon">🎤</div>
+      <p className="voice-listing-unsupported-text">
         Voice input is not supported in this browser. Please use Chrome or Edge.
       </p>
-      <button onClick={onClose} className="btn btn-outline" style={{ width: 'auto', padding: '8px 20px' }}>
+      <button onClick={onClose} className="btn btn-outline voice-listing-unsupported-button">
         Use Text Input
       </button>
     </div>
   );
 
   return (
-    <div style={{ padding: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h3 style={{ fontSize: 17 }}>Voice Listing</h3>
-        <button onClick={onClose}
-          style={{ background: 'none', border: 'none', fontSize: 20,
-            cursor: 'pointer', color: 'var(--ash)', lineHeight: 1 }}>✕</button>
+    <div className="voice-listing-container">
+      <div className="voice-listing-header">
+        <h3 className="voice-listing-title">Voice Listing</h3>
+        <button onClick={onClose} className="voice-listing-close-btn">✕</button>
       </div>
 
-      <p style={{ fontSize: 13, color: 'var(--ash)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
+      <p className="voice-listing-instructions">
         Speak your listing in <strong>English, Nyanja, or Bemba</strong>.<br />
-        Example: <em>"charcoal, 10 bags, K95 each"</em>
+        Example: <em>"charcoal, 10 bags, K95 each, Kanyama"</em>
       </p>
+
+      {/* Language selector */}
+      {(phase === 'idle' || phase === 'error') && (
+        <div className="voice-listing-language-group">
+          <label className="voice-listing-language-label">Language</label>
+          <select 
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="voice-listing-language-select"
+          >
+            <option value="en-US">English (United States)</option>
+            <option value="en-GB">English (United Kingdom)</option>
+            <option value="ny-ZM">Nyanja (Zambia)</option>
+            <option value="bem-ZM">Bemba (Zambia)</option>
+          </select>
+          <p className="voice-listing-language-hint">
+            ⓘ Bemba/Nyanja support varies by browser. Chrome on Android has best support.
+          </p>
+        </div>
+      )}
 
       {/* Mic button */}
       {(phase === 'idle' || phase === 'error') && (
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <button onClick={startListening}
-            style={{
-              width: 80, height: 80, borderRadius: '50%',
-              background: 'var(--ember)', border: 'none',
-              cursor: 'pointer', fontSize: 32,
-              boxShadow: '0 4px 16px rgba(216,90,48,0.3)',
-              transition: 'transform 0.15s',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-            🎙️
-          </button>
-          <p style={{ fontSize: 12, color: 'var(--ash)', marginTop: 8 }}>Tap to speak</p>
+        <div className="voice-listing-mic-container">
+          <button onClick={startListening} className="voice-listing-mic-button">🎙️</button>
+          <p className="voice-listing-mic-label">Tap to speak</p>
         </div>
       )}
 
       {/* Listening animation */}
       {phase === 'listening' && (
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <button onClick={stopListening}
-            style={{
-              width: 80, height: 80, borderRadius: '50%',
-              background: '#E24B4A', border: 'none', cursor: 'pointer', fontSize: 32,
-              animation: 'pulse-mic 1s ease-in-out infinite',
-            }}>🎙️</button>
-          <p style={{ fontSize: 12, color: 'var(--ember)', marginTop: 8, fontWeight: 500 }}>
-            Listening... tap to stop
+        <div className="voice-listing-listening-container">
+          <button onClick={stopListening} className="voice-listing-listening-button">🎙️</button>
+          <p className="voice-listing-listening-status">Listening... tap to stop</p>
+          <p className="voice-listing-language-display">
+            Language: {selectedLanguage === 'en-US' ? 'English (US)' : selectedLanguage === 'en-GB' ? 'English (UK)' : selectedLanguage === 'ny-ZM' ? 'Nyanja' : 'Bemba'}
           </p>
           {transcript && (
-            <p style={{ fontSize: 13, color: 'var(--coal)', marginTop: 8,
-              background: 'var(--cream)', borderRadius: 8, padding: '8px 12px' }}>
-              "{transcript}"
-            </p>
+            <p className="voice-listing-transcript-preview">"{transcript}"</p>
           )}
         </div>
       )}
 
       {/* Processing */}
       {phase === 'processing' && (
-        <div style={{ textAlign: 'center', padding: '1rem' }}>
-          <div className="spinner" style={{ margin: '0 auto', borderTopColor: 'var(--ember)',
-            border: '3px solid var(--border)', width: 28, height: 28 }} />
-          <p style={{ fontSize: 13, color: 'var(--ash)', marginTop: 8 }}>Processing speech...</p>
+        <div className="voice-listing-processing-container">
+          <div className="voice-listing-spinner" />
+          <p className="voice-listing-processing-text">Processing speech...</p>
         </div>
       )}
 
       {/* Error */}
       {phase === 'error' && (
-        <div className="error-msg" style={{ marginBottom: '1rem' }}>{errorMsg}</div>
+        <div className="voice-listing-error">{errorMsg}</div>
       )}
 
       {/* Results */}
       {phase === 'done' && (
-        <div style={{ marginBottom: '1rem' }}>
-          <div style={{ background: 'var(--cream)', borderRadius: 10, padding: '1rem',
-            marginBottom: 10 }}>
-            <p style={{ fontSize: 11, color: 'var(--ash)', textTransform: 'uppercase',
-              letterSpacing: '0.06em', marginBottom: 6 }}>You said</p>
-            <p style={{ fontSize: 13, color: 'var(--coal)', fontStyle: 'italic' }}>
-              "{extracted.rawTranscript}"
-            </p>
+        <div className="voice-listing-results">
+          <div className="voice-listing-raw-transcript">
+            <p className="voice-listing-raw-label">You said</p>
+            <p className="voice-listing-raw-text">"{extracted.rawTranscript}"</p>
           </div>
 
           {/* Show detected fields */}
-          <div style={{ display: 'grid', gap: 8 }}>
+          <div className="voice-listing-fields-grid">
             {[
               extracted.suggestedTitle && { label: 'Title detected', value: extracted.suggestedTitle },
               extracted.suggestedPrice && { label: 'Price detected', value: `K${extracted.suggestedPrice}` },
               extracted.suggestedQty && { label: 'Quantity detected', value: extracted.suggestedQty },
+              extracted.suggestedNeighbourhood && { label: 'Location detected', value: extracted.suggestedNeighbourhood },
             ].filter(Boolean).map(({ label, value }) => (
-              <div key={label} style={{ background: 'white', border: '1px solid var(--border)',
-                borderRadius: 8, padding: '10px 12px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--ash)' }}>{label}</span>
-                <span style={{ fontSize: 13, fontWeight: 500 }}>{value}</span>
+              <div key={label} className="voice-listing-field-item">
+                <span className="voice-listing-field-label">{label}</span>
+                <span className="voice-listing-field-value">{value}</span>
               </div>
             ))}
           </div>
 
           {/* Show partial match warning */}
           {!extracted.suggestedTitle && (
-            <div style={{ background: '#FFF8E1', border: '1px solid #FFD54F', borderRadius: 8, padding: '10px 12px', marginTop: 8 }}>
-              <p style={{ fontSize: 12, color: '#F57F17' }}>
+            <div className="voice-listing-warning">
+              <p className="voice-listing-warning-text">
                 ℹ️ Could not fully extract details. Fill in the rest manually.
               </p>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: '1rem' }}>
-            <button onClick={handleUse} className="btn btn-ember" style={{ flex: 2 }}>
+          <div className="voice-listing-actions">
+            <button onClick={handleUse} className="btn btn-ember voice-listing-use-button">
               ✅ Use This
             </button>
-            <button onClick={handleRetry} className="btn btn-outline" style={{ flex: 1 }}>
+            <button onClick={handleRetry} className="btn btn-outline voice-listing-retry-button">
               Retry
             </button>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes pulse-mic {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(226,75,74,0.4); }
-          50%       { box-shadow: 0 0 0 16px rgba(226,75,74,0); }
-        }
-      `}</style>
     </div>
   );
 }

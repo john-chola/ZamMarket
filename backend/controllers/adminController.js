@@ -87,7 +87,7 @@ exports.verifySeller = async (req, res, next) => {
     await user.save();
 
     // Add ADMIN_VERIFIED block to trust chain
-    await addTrustEvent(user._id, 'ADMIN_VERIFIED', { verifiedBy: req.user._id });
+    await addTrustEvent(user._id, 'ADMIN_VERIFIED', { verifiedBy: req.user._id.toString() });
 
     res.json({ status: 'success', message: `${user.name} has been verified`, user });
   } catch (err) { next(err); }

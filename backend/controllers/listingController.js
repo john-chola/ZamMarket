@@ -30,7 +30,7 @@ exports.createListing = async (req, res, next) => {
     await listing.populate('seller', 'name neighbourhood trustScore sellerProfile');
 
     // Fire blockchain trust event
-    await addTrustEvent(req.user._id, 'LISTING_CREATED', { listingId: listing._id, title });
+    await addTrustEvent(req.user._id, 'LISTING_CREATED', { listingId: listing._id.toString(), title });
 
     res.status(201).json({ status: 'success', listing });
   } catch (err) {

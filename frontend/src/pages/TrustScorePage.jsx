@@ -6,7 +6,6 @@ import './TrustScorePage.css';
 
 const EVENT_LABELS = {
   LISTING_CREATED:   { label: 'Listing posted',         icon: '📦', color: '#3B6D11' },
-  CONVERSATION_DONE: { label: 'Conversation completed',  icon: '💬', color: '#185FA5' },
   BUYER_RATING_5:    { label: '5-star rating received',  icon: '⭐', color: '#BA7517' },
   BUYER_RATING_4:    { label: '4-star rating received',  icon: '⭐', color: '#BA7517' },
   BUYER_RATING_3:    { label: '3-star rating received',  icon: '⭐', color: '#888780' },
@@ -134,7 +133,6 @@ export default function TrustScorePage() {
           <div className="trust-stats-grid">
             {[
               { label: 'Listings', value: blocks.filter(b => b.event?.type === 'LISTING_CREATED').length, icon: '📦' },
-              { label: 'Chats',    value: blocks.filter(b => b.event?.type === 'CONVERSATION_DONE').length, icon: '💬' },
               { label: 'Ratings',  value: blocks.filter(b => b.event?.type?.startsWith('BUYER_RATING')).length, icon: '⭐' },
             ].map(({ label, value, icon }) => (
               <div key={label} className="trust-stat-item">
@@ -161,7 +159,6 @@ export default function TrustScorePage() {
             <p className="trust-guide-title">How to build your trust score</p>
             {[
               { icon: '📦', action: 'Post a listing',             points: '+2 pts' },
-              { icon: '💬', action: 'Complete a conversation',    points: '+5 pts' },
               { icon: '⭐', action: 'Receive a 5-star rating',    points: '+8 pts' },
               { icon: '✓',  action: 'Get verified by admin',      points: '+15 pts' },
             ].map(({ icon, action, points }) => (

@@ -103,15 +103,14 @@ export default function DashboardPage() {
       path: userId ? `/trust/${userId}` : '/trust' },
   ];
 
-  // ── Buyer nav — no trust score ────────────────────
+  // ── Buyer nav 
   const buyerItems = [
     { icon: '🔍', label: 'Browse Charcoal', sub: 'Find sellers near you', path: '/browse' },
-    { icon: '📍', label: 'Near Me',
-      sub: `In ${(user.neighbourhood || 'your area').replace('_', ' ')}`,
-      path: `/browse?neighbourhood=${user.neighbourhood}` },
+    
     { icon: '💬', label: 'Messages',
       sub: unreadTotal > 0 ? `${unreadTotal} unread` : 'Your inbox',
       path: '/chat', badge: unreadTotal },
+
     { icon: '🪵', label: 'Become a Seller', sub: 'Post charcoal listings',
       path: null, action: 'upgrade' },
   ];
@@ -140,7 +139,7 @@ export default function DashboardPage() {
         <OfflineBanner />
         <PWAInstallBanner />
 
-        {/* Profile card — NO trust score bar here */}
+        {/* Profile card  */}
         <div className="card profile-card">
           <div className="profile-card__header">
             <div className="profile-avatar">{initials}</div>
@@ -170,7 +169,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          {/* Trust score removed from here — it lives in the nav grid card below */}
+          
         </div>
 
         {/* Buyer upgrade banner */}
@@ -186,7 +185,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Seller quick post banner only — trust chain card REMOVED */}
+        {/* Seller quick post banner only */}
         {isSeller && (
           <div className="seller-post-banner">
             <div>
@@ -199,7 +198,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Nav grid — trust score appears ONCE here for sellers */}
+        {/* Nav grid  */}
         <div className="nav-grid">
           {navItems.map(({ icon, label, sub, path, badge, action }) => {
             const cardContent = (

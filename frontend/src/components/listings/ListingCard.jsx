@@ -92,7 +92,7 @@ export default function ListingCard({ listing, showActions = false, onStatusChan
               onClick={() => onDelete(listing._id)}
               className="listing-card__action-btn listing-card__action-btn--small listing-card__action-btn--delete"
             >
-              🗑
+              Delete
             </button>
           </div>
         )}

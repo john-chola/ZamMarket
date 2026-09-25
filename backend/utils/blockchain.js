@@ -19,23 +19,46 @@ const createBlock = (event, previousHash = '0'.repeat(64)) => {
   return block;
 };
 
-// Verify the entire chain is intact (tamper detection)
+// ── Verify the entire chain is intact (tamper detection) ──
+// IMPORTANT: blocks retrieved from MongoDB are Mongoose documents,
+// not plain objects. Spreading them (`{...block}`) pulls in extra
+// fields that were never part of the original hash — _id, seller,
+// blockIndex, createdAt, updatedAt, __v, Mongoose internals — which
+// makes the recomputed hash never match, even with zero tampering.
+//
+// Fix: explicitly rebuild the SAME shape that was hashed at
+// creation time in createBlock() — only {timestamp, event, previousHash}
+// — before recomputing. Works whether `blocks` are Mongoose documents
+// or plain lean objects, since we access fields by dot notation.
 const verifyChain = (blocks) => {
   if (!blocks || blocks.length === 0) return true;
 
-  for (let i = 1; i < blocks.length; i++) {
-    const current  = blocks[i];
-    const previous = blocks[i - 1];
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
 
-    // Recompute hash to check it hasn't been modified
-    const { hash, ...blockWithoutHash } = current;
-    const recomputed = sha256(blockWithoutHash);
+    // Reconstruct the exact canonical shape used at creation time
+    const canonical = {
+      timestamp: block.timestamp,
+      event: {
+        type:     block.event?.type,
+        sellerId: block.event?.sellerId,
+        data:     block.event?.data,
+      },
+      previousHash: block.previousHash,
+    };
 
-    if (recomputed !== current.hash) {
-      return false; // block was tampered with
+    const recomputed = sha256(canonical);
+    if (recomputed !== block.hash) {
+      return false; // this block's content doesn't match its own hash
     }
-    if (current.previousHash !== previous.hash) {
-      return false; // chain link broken
+
+    if (i === 0) {
+      // First block must chain from the genesis hash
+      if (block.previousHash !== '0'.repeat(64)) return false;
+    } else {
+      // Every other block must link to the previous block's hash
+      const previous = blocks[i - 1];
+      if (block.previousHash !== previous.hash) return false;
     }
   }
   return true;
@@ -49,7 +72,6 @@ const calculateScore = (blocks) => {
   for (const block of blocks) {
     switch (block.event?.type) {
       case 'LISTING_CREATED':    score += 2;  break; // +2 per listing
-      case 'CONVERSATION_DONE':  score += 5;  break; // +5 per completed chat
       case 'BUYER_RATING_5':     score += 8;  break; // +8 for 5-star rating
       case 'BUYER_RATING_4':     score += 5;  break;
       case 'BUYER_RATING_3':     score += 2;  break;

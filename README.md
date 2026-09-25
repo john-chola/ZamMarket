@@ -1,166 +1,325 @@
-# 🪵 ZamMarket — Sprint 1
+# 🪵 ZamMarket
 
-**A Progressive Web Application for local Zambian charcoal commerce**
-University of Zambia · Final Year Project · 2026
+**A Progressive Web Application for Local Zambian Charcoal Commerce**
+
+> Final Year Project — University of Zambia (UNZA)
+> School of Natural and Applied Sciences · Department of Computing and Informatics
+> Academic Year 2026
 
 ---
 
-## Project Structure
+## 📌 Problem Statement
+
+Charcoal sellers in Zambian communities struggle to find buyers in their immediate neighbourhood. Buyers have no reliable way to locate trusted charcoal sellers nearby. ZamMarket solves this by connecting local charcoal sellers and buyers through a mobile-first progressive web application.
+
+---
+
+## 🎯 Project Aims
+
+To design, develop, and evaluate a progressive web application for local Zambian commerce that incorporates:
+- Voice-based listing creation (English, Nyanja, Bemba)
+- Offline-first functionality with background sync
+- Blockchain-based seller trust scoring
+- Real-time peer-to-peer messaging
+
+---
+
+## ✨ Features
+
+### For Sellers
+- 📱 Register with Zambian phone number (OTP verification)
+- 🎙️ Create listings by speaking in English, Nyanja, or Bemba
+- 📷 Upload product photos (Cloudinary)
+- 📦 Manage listings (edit, mark as sold, pause, delete)
+- 💬 Real-time chat with buyers
+- 🔗 Build a blockchain-verified trust score
+- 📵 Works offline — listings sync when reconnected
+
+### For Buyers
+- 🔍 Browse charcoal listings with neighbourhood and price filters
+- 👤 View seller profiles with trust scores
+- 💬 Message sellers directly
+- ⭐ Rate sellers after collecting charcoal (blockchain recorded)
+- 📵 Offline browsing of cached listings
+
+### For Admins
+- 📊 Dashboard with platform statistics
+- ✅ Verify trusted sellers
+- ⛔ Suspend/reactivate accounts
+- 🗑️ Remove inappropriate listings
+- 🔄 Change user roles
+
+---
+
+## 🏗️ System Architecture
 
 ```
-zammarket/
-├── backend/          # Node.js + Express + MongoDB API
-└── frontend/         # React 18 + Redux Toolkit + Tailwind-inspired CSS
+┌─────────────────────────────────────┐
+│         Presentation Layer          │
+│   React 18 + Redux Toolkit + Vite   │
+│        Progressive Web App          │
+├─────────────────────────────────────┤
+│          Application Layer          │
+│    Node.js + Express.js + JWT       │
+│         Socket.io (chat)            │
+├─────────────────────────────────────┤
+│            Data Layer               │
+│  MongoDB Atlas + Mongoose ODM       │
+│  IndexedDB (offline queue)          │
+└─────────────────────────────────────┘
 ```
 
 ---
 
-## Prerequisites
+## 🛠️ Tech Stack
 
-Install these before starting:
-
-1. **Node.js 18+** — https://nodejs.org (download LTS version)
-2. **MongoDB Atlas account** — https://cloud.mongodb.com (free tier)
-3. **Git** — https://git-scm.com
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Redux Toolkit, React Router 6, Vite |
+| Styling | Custom CSS with design tokens |
+| Backend | Node.js, Express.js 4 |
+| Database | MongoDB Atlas + Mongoose |
+| Real-time | Socket.io |
+| Authentication | JWT + bcrypt + OTP (simulated) |
+| Image Storage | Cloudinary |
+| Offline | Service Worker + IndexedDB |
+| Blockchain | SHA-256 hash chain (crypto-js) |
+| Voice | Web Speech API (English/Nyanja/Bemba) |
+| Hosting | Vercel (frontend) + Render (backend) |
 
 ---
 
-## Backend Setup
+## 🚀 Getting Started
 
-### 1. Install dependencies
+### Prerequisites
+
+- Node.js 18+ — https://nodejs.org
+- Git — https://git-scm.com
+- MongoDB Atlas account — https://cloud.mongodb.com (free)
+- Cloudinary account — https://cloudinary.com (free)
+
+---
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/zammarket.git
+cd zammarket
+```
+
+---
+
+### 2. Backend setup
+
 ```bash
 cd backend
 npm install
 ```
 
-### 2. Configure environment
+Create your `.env` file:
 ```bash
 cp .env.example .env
 ```
-Open `.env` and fill in your MongoDB Atlas connection string:
-```
-MONGODB_URI=mongodb+srv://youruser:yourpass@cluster0.xxxxx.mongodb.net/zammarket
-JWT_SECRET=pick_any_long_random_string_here
+
+Fill in `backend/.env`:
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/zammarket
+JWT_SECRET=your_long_random_secret_here
+JWT_EXPIRES_IN=7d
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+FRONTEND_URL=http://localhost:5173
 ```
 
-**Getting your MongoDB URI:**
-- Log in to MongoDB Atlas → Clusters → Connect → Connect your application
-- Copy the connection string and replace `<password>` with your DB user password
-
-### 3. Start the backend
+Start the backend:
 ```bash
-npm run dev        # development (auto-restarts on changes)
-# or
-npm start          # production
+npm run dev
 ```
 
-Backend runs on: http://localhost:5000
-
-### 4. Test it works
-Open: http://localhost:5000/api/health
-You should see: `{ "status": "ok", "message": "ZamMarket API is running" }`
+Backend runs at: `http://localhost:5000`
+Health check: `http://localhost:5000/api/health`
 
 ---
 
-## Frontend Setup
+### 3. Frontend setup
 
-### 1. Install dependencies
 ```bash
-cd frontend
+cd ../frontend
 npm install
 ```
 
-### 2. Start the frontend
+Create `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_SOCKET_URL=http://localhost:5000
+```
+
+Start the frontend:
 ```bash
 npm start
 ```
 
-Frontend runs on: http://localhost:3000
+Frontend runs at: `http://localhost:5173`
 
 ---
 
-## How Simulated OTP Works
+### 4. How OTP works in development
 
-Since we are using simulated OTP (no real SMS):
+Since SMS is simulated, OTP codes print to the **backend terminal**:
 
-1. User enters their phone number on the Register page
-2. They click "Send Verification Code"
-3. **Look at your backend terminal** — you will see:
-   ```
-   ──────────────────────────────────────
-   📱 SIMULATED OTP for +260977123456: 847291
-   ──────────────────────────────────────
-   ```
-4. Enter that 6-digit code in the app
+```
+──────────────────────────────────────
+📱 SIMULATED OTP for +260977123456: 847291
+──────────────────────────────────────
+```
+
+Check the backend terminal when registering.
 
 ---
 
-## API Endpoints (Sprint 1)
+## 📡 API Endpoints
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/health` | Health check | No |
 | POST | `/api/auth/request-otp` | Send OTP to phone | No |
 | POST | `/api/auth/register` | Create account | No |
-| POST | `/api/auth/login` | Log in | No |
-| GET | `/api/auth/me` | Get current user | JWT |
-| GET | `/api/users/:id` | Get user profile | No |
-| PUT | `/api/users/me` | Update profile | JWT |
-| PUT | `/api/users/me/upgrade-to-seller` | Become a seller | JWT |
+| POST | `/api/auth/login` | Login | No |
+| GET | `/api/auth/me` | Current user | JWT |
+| GET | `/api/listings` | Browse listings | No |
+| POST | `/api/listings` | Create listing | Seller |
+| PUT | `/api/listings/:id` | Update listing | Seller |
+| DELETE | `/api/listings/:id` | Delete listing | Seller |
+| GET | `/api/chat/conversations` | Inbox | JWT |
+| POST | `/api/chat/conversations` | Start conversation | JWT |
+| GET | `/api/chat/conversations/:id/messages` | Get messages | JWT |
+| GET | `/api/trust/:sellerId` | Seller trust chain | No |
+| POST | `/api/trust/rate` | Rate a seller | JWT |
+| GET | `/api/admin/stats` | Platform stats | Admin |
+| GET | `/api/admin/users` | All users | Admin |
+| PUT | `/api/admin/users/:id/verify` | Verify seller | Admin |
 
 ---
 
-## User Flows (Sprint 1)
+## 🌐 Deployment
 
-### Registration (3 steps)
-1. Enter Zambian phone number (Zamtel/Airtel/MTN)
-2. Enter 6-digit OTP from server console
-3. Fill in name, password, role (buyer/seller), neighbourhood
+### Frontend — Vercel
+```
+Framework:        Vite
+Root Directory:   frontend
+Build Command:    npm run build
+Output Directory: dist
 
-### Login
-- Phone number + password → JWT token stored in localStorage
+Environment Variables:
+  VITE_API_URL    = https://your-api.onrender.com/api
+  VITE_SOCKET_URL = https://your-api.onrender.com
+```
 
-### Dashboard
-- View profile, trust score, neighbourhood
-- Buyers can upgrade to seller role
-- Placeholders for Sprint 2 features (listings, browse)
+### Backend — Render
+```
+Root Directory: backend
+Build Command:  npm install
+Start Command:  node server.js
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Redux Toolkit, React Router 6 |
-| Backend | Node.js, Express 4 |
-| Database | MongoDB Atlas + Mongoose |
-| Auth | JWT (7-day expiry) + bcrypt (12 rounds) |
-| OTP | Simulated (console) → swap for Africa's Talking in Sprint 4 |
-| Hosting | Vercel (frontend) + Render (backend) |
+Environment Variables:
+  PORT, NODE_ENV, MONGODB_URI, JWT_SECRET,
+  JWT_EXPIRES_IN, CLOUDINARY_*, FRONTEND_URL
+```
 
 ---
 
-## Sprint Roadmap
+## 📁 Project Structure
 
-- ✅ **Sprint 1** — Auth, OTP, user profiles, roles ← *You are here*
-- ⬜ **Sprint 2** — Charcoal listings, browse, search, neighbourhood filters
-- ⬜ **Sprint 3** — Voice listing, offline PWA, blockchain trust score
-- ⬜ **Sprint 4** — Real-time chat, offline message queue, admin panel
-- ⬜ **Sprint 5** — Testing, Lighthouse audit, deployment, documentation
+```
+zammarket/
+├── backend/
+│   ├── controllers/        # authController, listingController, chatController,
+│   │                       # trustController, adminController
+│   ├── middleware/         # auth.js, upload.js, rateLimiter.js, errorHandler.js
+│   ├── models/             # User, Listing, Conversation, Message, TrustChain, OTP
+│   ├── routes/             # auth, user, listing, chat, trust, admin
+│   ├── utils/              # blockchain.js, cloudinary.js, jwt.js, otp.js, socket.js
+│   ├── .env.example
+│   └── server.js
+│
+└── frontend/
+    ├── public/             # manifest.json, sw.js, favicon.svg
+    └── src/
+        ├── components/
+        │   ├── common/     # ProtectedRoute
+        │   ├── listings/   # ListingCard, CreateListingForm
+        │   └── voice/      # VoiceListingInput
+        ├── pages/          # Login, Register, Dashboard, Browse, Listings,
+        │                   # Chat, Inbox, TrustScore, Admin, CreateListing
+        ├── store/
+        │   └── slices/     # authSlice, listingSlice, chatSlice
+        ├── utils/          # api.js, socket.js, validation.js,
+        │                   # offlineQueue.js, pwa.js
+        ├── App.jsx
+        └── index.jsx
+```
 
 ---
 
-## Common Issues
+## 🧪 Testing
 
-**`ECONNREFUSED` on backend start?**
-→ Check your `MONGODB_URI` in `.env` is correct
+```bash
+# Backend unit tests
+cd backend
+npm test
 
-**OTP not appearing?**
-→ Make sure you are watching the backend terminal, not the frontend
+# Frontend component tests
+cd frontend
+npm test
 
-**CORS error?**
-→ Make sure both servers are running (port 5000 + 3000)
+# Lighthouse performance audit
+# Open Chrome → DevTools → Lighthouse → Generate report
+```
+
+**Test targets:**
+- SUS usability score ≥ 70
+- Lighthouse performance ≥ 70 on mobile
+- Offline functionality verified
+- Blockchain tamper detection verified
 
 ---
 
-*ZamMarket — UNZA School of Natural and Applied Sciences, Dept of Computing & Informatics*
+## 🔐 Security
+
+- Passwords hashed with **bcrypt** (12 rounds)
+- Authentication via **JWT** (7-day expiry)
+- OTP rate limited — 3 attempts per 10 minutes
+- Login rate limited — 10 attempts per 15 minutes
+- Input validation and sanitisation on all endpoints
+- HTTPS enforced in production
+- Phone numbers masked in public profiles
+
+---
+
+## 📚 Academic References
+
+- Sommerville, I. (2016). *Software Engineering* (10th ed.). Pearson.
+- Larman, C. (2004). *Applying UML and Patterns* (3rd ed.). Addison-Wesley.
+- Martin, R.C. (2008). *Clean Code*. Prentice Hall.
+- Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1995). *Design Patterns*. Addison-Wesley.
+
+---
+
+## 👨‍💻 Author
+
+**John Chola**
+Student ID: 2021422054
+BSc Computer Science (Software Engineering)
+University of Zambia — School of Natural and Applied Sciences
+Department of Computing and Informatics
+
+---
+
+## 📄 Licence
+
+MIT — for academic purposes.
+
+*ZamMarket · UNZA Final Year Project · 2026*

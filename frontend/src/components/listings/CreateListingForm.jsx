@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createListing, clearError, clearCreateSuccess } from '../../store/slices/listingSlice';
-import { NEIGHBOURHOODS } from '../../utils/validation';
 import './CreateListingForm.css';
 
-const CHARCOAL_TYPES = ['Hardwood (Miombo)', 'Softwood', 'Mixed', 'Other'];
 const UNITS = ['bag', 'tin', 'kg'];
 
 export default function CreateListingForm({ onSuccess, voicePrefill }) {
@@ -13,11 +11,10 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
   const { user } = useSelector((s) => s.auth);
 
   const [title,             setTitle]             = useState('');
-  const [charcoalType,      setCharcoalType]      = useState('Hardwood (Miombo)');
   const [pricePerBag,       setPricePerBag]       = useState('');
   const [unit,              setUnit]              = useState('bag');
   const [quantityAvailable, setQuantityAvailable] = useState('');
-  const [neighbourhood,     setNeighbourhood]     = useState(user?.neighbourhood || 'Other');
+  const [neighbourhood,     setNeighbourhood]     = useState(user?.neighbourhood || '');
   const [description,       setDescription]       = useState('');
   const [imageFile,         setImageFile]         = useState(null);
   const [imagePreview,      setImagePreview]      = useState(null);
@@ -27,6 +24,7 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
     if (voicePrefill.suggestedTitle) setTitle(voicePrefill.suggestedTitle);
     if (voicePrefill.suggestedPrice) setPricePerBag(voicePrefill.suggestedPrice);
     if (voicePrefill.suggestedQty)   setQuantityAvailable(voicePrefill.suggestedQty);
+    if (voicePrefill.suggestedNeighbourhood) setNeighbourhood(voicePrefill.suggestedNeighbourhood);
   }, [voicePrefill]);
 
   useEffect(() => {
@@ -45,7 +43,6 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
     e.preventDefault();
     const formData = new FormData();
     formData.append('title',             title);
-    formData.append('charcoalType',      charcoalType);
     formData.append('pricePerBag',       pricePerBag);
     formData.append('unit',              unit);
     formData.append('quantityAvailable', quantityAvailable);
@@ -95,20 +92,12 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
         </label>
         <input
           type="text"
-          placeholder="e.g. Fresh Miombo Charcoal — 25kg bags"
+          placeholder="e.g. Fresh Charcoal — 25kg bags"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           maxLength={80}
         />
-      </div>
-
-      {/* Charcoal type */}
-      <div className="form-group">
-        <label className="form-label">Charcoal Type</label>
-        <select value={charcoalType} onChange={(e) => setCharcoalType(e.target.value)}>
-          {CHARCOAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
       </div>
 
       {/* Price + Unit */}
@@ -157,12 +146,20 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
 
       {/* Neighbourhood */}
       <div className="form-group">
-        <label className="form-label">Neighbourhood</label>
-        <select value={neighbourhood} onChange={(e) => setNeighbourhood(e.target.value)}>
-          {NEIGHBOURHOODS.map((n) => (
-            <option key={n} value={n}>{n.replace('_', ' ')}</option>
-          ))}
-        </select>
+        <label className="form-label">
+          Location / Neighbourhood
+          {voicePrefill?.suggestedNeighbourhood && (
+            <span className="voice-badge--inline"> 🎙</span>
+          )}
+        </label>
+        <input
+          type="text"
+          placeholder="e.g. Kalingalinga, Lusaka CBD, Kanyama..."
+          value={neighbourhood}
+          onChange={(e) => setNeighbourhood(e.target.value)}
+          required
+          maxLength={100}
+        />
       </div>
 
       {/* Description */}

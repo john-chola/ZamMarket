@@ -1,226 +1,421 @@
-/* ===================================================
-   VoiceListingInput.css — Mobile‑first voice form
-   =================================================== */
+/* ============================================================
+   VoiceListingInput.css
+   Styles for voice listing modal component
+   ============================================================ */
 
-/* ── Container ─────────────────────────────────── */
-.voice-input {
-    padding: 1.5rem;
+/* ── Container ──────────────────────────────────────────── */
+.voice-listing-container {
+  padding: 1.5rem;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.voice-listing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.voice-listing-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--coal);
+  margin: 0;
+}
+
+.voice-listing-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--ash);
+  line-height: 1;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.voice-listing-close-btn:hover {
+  color: var(--coal);
+}
+
+/* ── Instructions ───────────────────────────────────────── */
+.voice-listing-instructions {
+  font-size: 13px;
+  color: var(--ash);
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.voice-listing-instructions strong {
+  color: var(--coal);
+  font-weight: 600;
+}
+
+.voice-listing-instructions em {
+  color: var(--ember);
+  font-style: italic;
+}
+
+/* ── Language Selector ──────────────────────────────────── */
+.voice-listing-language-group {
+  margin-bottom: 1rem;
+}
+
+.voice-listing-language-label {
+  font-size: 12px;
+  color: var(--ash);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.voice-listing-language-select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-family: inherit;
+  background-color: white;
+  cursor: pointer;
+  color: var(--coal);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.voice-listing-language-select:hover {
+  border-color: var(--ember);
+}
+
+.voice-listing-language-select:focus {
+  outline: none;
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.voice-listing-language-hint {
+  font-size: 11px;
+  color: var(--ash);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ── Microphone Button (Idle/Error State) ──────────────── */
+.voice-listing-mic-container {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.voice-listing-mic-button {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--ember);
+  border: none;
+  cursor: pointer;
+  font-size: 32px;
+  box-shadow: 0 4px 16px rgba(216, 90, 48, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.voice-listing-mic-button:hover {
+  transform: scale(1.05);
+}
+
+.voice-listing-mic-button:active {
+  transform: scale(0.98);
+}
+
+.voice-listing-mic-label {
+  font-size: 12px;
+  color: var(--ash);
+  margin-top: 8px;
+}
+
+/* ── Listening State ────────────────────────────────────── */
+.voice-listing-listening-container {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.voice-listing-listening-button {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #E24B4A;
+  border: none;
+  cursor: pointer;
+  font-size: 32px;
+  animation: pulse-mic 1s ease-in-out infinite;
+}
+
+.voice-listing-listening-status {
+  font-size: 12px;
+  color: var(--ember);
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.voice-listing-language-display {
+  font-size: 11px;
+  color: var(--ash);
+  margin-top: 6px;
+}
+
+.voice-listing-transcript-preview {
+  font-size: 13px;
+  color: var(--coal);
+  margin-top: 8px;
+  background: var(--cream);
+  border-radius: 8px;
+  padding: 8px 12px;
+  word-break: break-word;
+}
+
+/* ── Processing State ───────────────────────────────────– */
+.voice-listing-processing-container {
+  text-align: center;
+  padding: 1rem;
+}
+
+.voice-listing-spinner {
+  margin: 0 auto;
+  border-top-color: var(--ember);
+  border: 3px solid var(--border);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.voice-listing-processing-text {
+  font-size: 13px;
+  color: var(--ash);
+  margin-top: 8px;
+}
+
+/* ── Error State ────────────────────────────────────────– */
+.voice-listing-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ── Results Display ────────────────────────────────────– */
+.voice-listing-results {
+  margin-bottom: 1rem;
+}
+
+.voice-listing-raw-transcript {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 10px;
+}
+
+.voice-listing-raw-label {
+  font-size: 11px;
+  color: var(--ash);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.voice-listing-raw-text {
+  font-size: 13px;
+  color: var(--coal);
+  font-style: italic;
+  word-break: break-word;
+}
+
+/* ── Extracted Fields Grid ──────────────────────────────– */
+.voice-listing-fields-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.voice-listing-field-item {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.2s ease;
+}
+
+.voice-listing-field-item:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.voice-listing-field-label {
+  font-size: 12px;
+  color: var(--ash);
+  font-weight: 500;
+}
+
+.voice-listing-field-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--coal);
+}
+
+/* ── Warning Message ────────────────────────────────────– */
+.voice-listing-warning {
+  background: #FFF8E1;
+  border: 1px solid #FFD54F;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  margin-bottom: 1rem;
+}
+
+.voice-listing-warning-text {
+  font-size: 12px;
+  color: #F57F17;
+  margin: 0;
+}
+
+/* ── Action Buttons ────────────────────────────────────– */
+.voice-listing-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.voice-listing-use-button {
+  flex: 2;
+}
+
+.voice-listing-retry-button {
+  flex: 1;
+}
+
+/* ── Browser Not Supported ──────────────────────────────– */
+.voice-listing-unsupported {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.voice-listing-unsupported-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.voice-listing-unsupported-text {
+  color: var(--ash);
+  font-size: 14px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.voice-listing-unsupported-button {
+  width: auto;
+  padding: 8px 20px;
+}
+
+/* ── Animations ────────────────────────────────────────– */
+@keyframes pulse-mic {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(226, 75, 74, 0.4);
   }
-  
-  /* ── Header ───────────────────────────────────── */
-  .voice-input__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
+  50% {
+    box-shadow: 0 0 0 16px rgba(226, 75, 74, 0);
   }
-  
-  .voice-input__title {
-    font-size: 17px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
-  
-  .voice-input__close-btn {
-    background: none;
-    border: none;
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Responsive Design ──────────────────────────────────– */
+@media (min-width: 480px) {
+  .voice-listing-container {
+    padding: 2rem;
+  }
+
+  .voice-listing-title {
     font-size: 20px;
-    cursor: pointer;
-    color: var(--ash);
-    line-height: 1;
   }
-  
-  /* ── Instructions ──────────────────────────────── */
-  .voice-input__instructions {
-    font-size: 13px;
-    color: var(--ash);
-    margin-bottom: 1.25rem;
-    line-height: 1.6;
-  }
-  
-  /* ── Mic area ──────────────────────────────────── */
-  .voice-input__mic-area {
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-  
-  .voice-input__mic-btn {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    font-size: 32px;
-    background: var(--ember);
-    box-shadow: 0 4px 16px rgba(216, 90, 48, 0.3);
-    transition: transform 0.15s;
-  }
-  
-  .voice-input__mic-btn:hover {
-    transform: scale(1.05);
-  }
-  
-  .voice-input__mic-btn--listening {
-    background: #e24b4a;
-    animation: voice-input-pulse 1s ease-in-out infinite;
-  }
-  
-  .voice-input__mic-label {
-    font-size: 12px;
-    color: var(--ash);
-    margin-top: 8px;
-  }
-  
-  .voice-input__mic-label--listening {
-    color: var(--ember);
-    font-weight: 500;
-  }
-  
-  /* ── Intermediate transcript ──────────────────── */
-  .voice-input__transcript {
-    font-size: 13px;
-    color: var(--coal);
-    margin-top: 8px;
-    background: var(--cream);
-    border-radius: 8px;
-    padding: 8px 12px;
-  }
-  
-  /* ── Processing spinner ────────────────────────── */
-  .voice-input__processing {
-    text-align: center;
-    padding: 1rem;
-  }
-  
-  .voice-input__spinner {
-    width: 28px;
-    height: 28px;
-    border: 3px solid var(--border);
-    border-top-color: var(--ember);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto;
-  }
-  
-  .voice-input__processing-text {
-    font-size: 13px;
-    color: var(--ash);
-    margin-top: 8px;
-  }
-  
-  /* ── Error message ─────────────────────────────── */
-  .voice-input__error {
-    margin-bottom: 1rem;
-  }
-  
-  /* ── Results section ───────────────────────────── */
-  .voice-input__results {
-    margin-bottom: 1rem;
-  }
-  
-  .voice-input__you-said {
-    background: var(--cream);
-    border-radius: 10px;
-    padding: 1rem;
-    margin-bottom: 10px;
-  }
-  
-  .voice-input__you-said-label {
-    font-size: 11px;
-    color: var(--ash);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 6px;
-  }
-  
-  .voice-input__you-said-text {
-    font-size: 13px;
-    color: var(--coal);
-    font-style: italic;
-  }
-  
-  /* ── Detection grid ────────────────────────────── */
-  .voice-input__detection-grid {
-    display: grid;
-    gap: 8px;
-  }
-  
-  .voice-input__detection-item {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .voice-input__detection-label {
-    font-size: 12px;
-    color: var(--ash);
-  }
-  
-  .voice-input__detection-value {
-    font-size: 13px;
-    font-weight: 500;
-  }
-  
-  /* ── Action buttons ────────────────────────────── */
-  .voice-input__actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 1rem;
-  }
-  
-  .voice-input__use-btn {
-    flex: 2;
-  }
-  
-  .voice-input__retry-btn {
-    flex: 1;
-  }
-  
-  /* ── Empty result fallback ─────────────────────── */
-  .voice-input__empty {
-    text-align: center;
-  }
-  
-  .voice-input__empty-text {
-    color: var(--ash);
-    font-size: 13px;
-    margin-bottom: 12px;
-  }
-  
-  .voice-input__empty-btn {
-    width: auto;
-    padding: 8px 20px;
-  }
-  
-  /* ── Unsupported browser notice ────────────────── */
-  .voice-input__unsupported {
-    padding: 1.5rem;
-    text-align: center;
-  }
-  
-  .voice-input__unsupported-icon {
-    font-size: 36px;
-    margin-bottom: 10px;
-  }
-  
-  .voice-input__unsupported-text {
-    color: var(--ash);
+
+  .voice-listing-instructions {
     font-size: 14px;
-    margin-bottom: 16px;
   }
-  
-  .voice-input__unsupported-btn {
-    width: auto;
-    padding: 8px 20px;
+
+  .voice-listing-mic-button {
+    width: 100px;
+    height: 100px;
+    font-size: 40px;
   }
-  
-  /* ── Animations ────────────────────────────────── */
-  @keyframes voice-input-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(226, 75, 74, 0.4); }
-    50%      { box-shadow: 0 0 0 16px rgba(226, 75, 74, 0); }
+
+  .voice-listing-listening-button {
+    width: 100px;
+    height: 100px;
+    font-size: 40px;
   }
-  
-  /* Reuse the global spin animation if needed;
-     otherwise define it here (but it's already in index.css) */
+
+  .voice-listing-fields-grid {
+    gap: 10px;
+  }
+
+  .voice-listing-field-item {
+    padding: 12px 16px;
+  }
+
+  .voice-listing-actions {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  .voice-listing-container {
+    padding: 1rem;
+  }
+
+  .voice-listing-mic-button,
+  .voice-listing-listening-button {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+
+  .voice-listing-title {
+    font-size: 15px;
+  }
+
+  .voice-listing-instructions {
+    font-size: 12px;
+  }
+}
+
+/* ── Dark Mode Support (Optional) ────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .voice-listing-language-select,
+  .voice-listing-raw-transcript,
+  .voice-listing-field-item {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    border-color: #374151;
+  }
+
+  .voice-listing-transcript-preview {
+    background-color: #374151;
+  }
+
+  .voice-listing-title,
+  .voice-listing-raw-text {
+    color: #f3f4f6;
+  }
+}

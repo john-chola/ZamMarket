@@ -1,6 +1,6 @@
 // Validates Zambian phone numbers:
 // Accepts: +2609XXXXXXX, 09XXXXXXX, 07XXXXXXX
-// Zamtel: 095, 096, 097 — Airtel: 097 — MTN: 076, 077, 078
+// Zamtel: 095 — Airtel: 097, 077 — MTN: 076, 096
 export const isValidZambianPhone = (phone) =>
     /^(\+260|0)(9[5-7]|7[6-9])\d{7}$/.test(phone.trim());
   
