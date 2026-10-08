@@ -49,9 +49,8 @@ export default function RegisterPage() {
     return () => { dispatch(clearError()); dispatch(resetOtp()); };
   }, [isAuthenticated, navigate, dispatch]);
 
-  useEffect(() => {
-    if (otpSent && step === 0) setStep(1);
-  }, [otpSent, step]);
+  // Move to the code step as soon as the OTP has been sent
+  if (otpSent && step === 0) setStep(1);
 
   const handleRequestOTP = (e) => {
     e.preventDefault();

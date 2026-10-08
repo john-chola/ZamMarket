@@ -17,3 +17,12 @@ exports.authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Account creation (limits fake-account sign-ups from one IP)
+exports.registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: { status: 'error', message: 'Too many sign-up attempts. Try again in an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

@@ -419,3 +419,26 @@
     color: #f3f4f6;
   }
 }
+
+/* ── Editable transcript ────────────────────────────────── */
+.voice-listing-edit-input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.voice-listing-edit-input:focus {
+  outline: none;
+  border-color: var(--ember);
+}
+
+.voice-listing-raw-label {
+  display: block;
+}

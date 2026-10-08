@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import api from '../utils/api';
@@ -30,9 +30,16 @@ export default function TrustScorePage() {
   const isValidId = (id) => id && id !== 'undefined' && id !== 'null' && /^[a-f\d]{24}$/i.test(id);
   const targetId  = isValidId(sellerId) ? sellerId : myId;
 
-  const [data, setData]       = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  // The result remembers which seller it belongs to, so loading and
+  // error states are derived instead of being set inside the effect
+  const [result, setResult]   = useState({ id: null, data: null, error: '' });
+  const invalidTarget = !targetId || !isValidId(targetId);
+  const isCurrent = result.id === targetId;
+  const data    = isCurrent ? result.data : null;
+  const loading = !invalidTarget && !isCurrent;
+  const error   = invalidTarget
+    ? 'Could not identify user. Please log out and log back in.'
+    : (isCurrent ? result.error : '');
   const [rating, setRating]   = useState(0);
   const [rated, setRated]     = useState(false);
   const [rateError, setRateError] = useState('');
@@ -48,20 +55,17 @@ export default function TrustScorePage() {
   }, [user?.role, sellerId, myId, navigate]);
 
   useEffect(() => {
-    if (!targetId || !isValidId(targetId)) {
-      setError('Could not identify user. Please log out and log back in.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError('');
+    if (invalidTarget) return;
+    let cancelled = false;
     api.get(`/trust/${targetId}`)
-      .then(({ data: d }) => { setData(d); setLoading(false); })
+      .then(({ data: d }) => { if (!cancelled) setResult({ id: targetId, data: d, error: '' }); })
       .catch((err) => {
-        setError(err.response?.data?.message || 'Could not load trust data');
-        setLoading(false);
+        if (!cancelled) {
+          setResult({ id: targetId, data: null, error: err.response?.data?.message || 'Could not load trust data' });
+        }
       });
-  }, [targetId]);
+    return () => { cancelled = true; };
+  }, [targetId, invalidTarget]);
 
   const handleRate = async (stars) => {
     if (!isValidId(targetId)) return;
@@ -71,7 +75,7 @@ export default function TrustScorePage() {
       await api.post('/trust/rate', { sellerId: targetId, rating: stars });
       setRated(true);
       const { data: fresh } = await api.get(`/trust/${targetId}`);
-      setData(fresh);
+      setResult({ id: targetId, data: fresh, error: '' });
     } catch (err) {
       setRateError(err.response?.data?.message || 'Rating failed');
       setRating(0);

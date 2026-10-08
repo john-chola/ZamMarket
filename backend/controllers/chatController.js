@@ -7,17 +7,12 @@ exports.startConversation = async (req, res, next) => {
   try {
     const { listingId } = req.body;
 
-    console.log('startConversation called');
-    console.log('  body:', req.body);
-    console.log('  user:', req.user?._id, req.user?.role);
-
     if (!listingId) {
       return res.status(400).json({ status: 'error', message: 'listingId is required' });
     }
 
     // Find listing WITHOUT populate first
     const listing = await Listing.findById(listingId);
-    console.log('  listing found:', listing?._id, 'seller:', listing?.seller);
 
     if (!listing) {
       return res.status(404).json({ status: 'error', message: 'Listing not found' });
@@ -33,7 +28,6 @@ exports.startConversation = async (req, res, next) => {
       listing: listingId,
       buyer: req.user._id,
     });
-    console.log('  existing conversation:', conversation?._id || 'none — creating new');
 
     if (!conversation) {
       conversation = await Conversation.create({
@@ -41,7 +35,6 @@ exports.startConversation = async (req, res, next) => {
         buyer: req.user._id,
         seller: listing.seller,
       });
-      console.log('  created conversation:', conversation._id);
     }
 
     // Populate separately
@@ -49,13 +42,10 @@ exports.startConversation = async (req, res, next) => {
       .populate('listing', 'title image pricePerBag unit neighbourhood')
       .populate('buyer',   'name neighbourhood')
       .populate('seller',  'name neighbourhood trustScore');
-
-    console.log('  populated OK — returning');
     res.status(201).json({ status: 'success', conversation });
 
   } catch (err) {
     console.error('startConversation error:', err.message);
-    console.error(err.stack);
     next(err);
   }
 };

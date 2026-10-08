@@ -30,8 +30,12 @@ const createBlock = (event, previousHash = '0'.repeat(64)) => {
 // creation time in createBlock() — only {timestamp, event, previousHash}
 // — before recomputing. Works whether `blocks` are Mongoose documents
 // or plain lean objects, since we access fields by dot notation.
-const verifyChain = (blocks) => {
-  if (!blocks || blocks.length === 0) return true;
+//
+// expectedHeadHash (optional): the latest hash saved on the seller's
+// User document. Checking it catches an edited or deleted LAST block,
+// which the links alone cannot detect, and a chain deleted outright.
+const verifyChain = (blocks, expectedHeadHash = '') => {
+  if (!blocks || blocks.length === 0) return !expectedHeadHash;
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
@@ -61,6 +65,7 @@ const verifyChain = (blocks) => {
       if (block.previousHash !== previous.hash) return false;
     }
   }
+  if (expectedHeadHash && blocks[blocks.length - 1].hash !== expectedHeadHash) return false;
   return true;
 };
 
@@ -75,6 +80,7 @@ const calculateScore = (blocks) => {
       case 'BUYER_RATING_5':     score += 8;  break; // +8 for 5-star rating
       case 'BUYER_RATING_4':     score += 5;  break;
       case 'BUYER_RATING_3':     score += 2;  break;
+      case 'BUYER_RATING_2':     score -= 2;  break;
       case 'BUYER_RATING_1':     score -= 5;  break; // -5 for bad rating
       case 'ADMIN_VERIFIED':     score += 15; break; // +15 for admin verification
       default: break;
