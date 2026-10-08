@@ -1,0 +1,150 @@
+// Turns a spoken English listing into listing-form fields.
+// Pure function: no React and no browser APIs, so it is easy to test on its own.
+
+// ── Number words ("ninety five" -> 95) ─────────────────────
+const UNITS = new Map(Object.entries({
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+}));
+const TEENS = new Map(Object.entries({
+  ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
+  sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+}));
+const TENS = new Map(Object.entries({
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+}));
+
+const isNumberWord = (w) =>
+  UNITS.has(w) || TEENS.has(w) || TENS.has(w) || w === 'hundred' || w === 'thousand';
+
+// Chrome usually returns digits already, but sometimes returns words.
+const wordsToDigits = (text) => {
+  const tokens = text.split(/\s+/).filter(Boolean);
+  const out = [];
+  let i = 0;
+  while (i < tokens.length) {
+    if (!isNumberWord(tokens[i])) { out.push(tokens[i]); i += 1; continue; }
+
+    let total = 0;
+    let current = 0;
+    let prev = null;
+    let j = i;
+    while (j < tokens.length) {
+      const w = tokens[j];
+      if (UNITS.has(w) && [null, 'tens', 'hundred', 'thousand', 'and'].includes(prev)) {
+        current += UNITS.get(w); prev = 'unit';
+      } else if (TEENS.has(w) && [null, 'hundred', 'thousand', 'and'].includes(prev)) {
+        current += TEENS.get(w); prev = 'teen';
+      } else if (TENS.has(w) && [null, 'hundred', 'thousand', 'and'].includes(prev)) {
+        current += TENS.get(w); prev = 'tens';
+      } else if (w === 'hundred' && [null, 'unit', 'teen'].includes(prev)) {
+        current = (current || 1) * 100; prev = 'hundred';
+      } else if (w === 'thousand' && prev !== 'thousand') {
+        total += (current || 1) * 1000; current = 0; prev = 'thousand';
+      } else if (w === 'and' && (prev === 'hundred' || prev === 'thousand')
+                 && j + 1 < tokens.length && isNumberWord(tokens[j + 1])) {
+        prev = 'and';
+      } else {
+        break;
+      }
+      j += 1;
+    }
+    out.push(String(total + current));
+    i = j;
+  }
+  return out.join(' ');
+};
+
+const normalise = (raw) => {
+  let t = String(raw).toLowerCase();
+  t = t.replace(/(\d),(\d{3})/g, '$1$2');   // 1,200 -> 1200
+  t = t.replace(/[^a-z0-9.\s]/g, ' ');      // drop punctuation, keep decimal points
+  t = t.replace(/\.(?!\d)/g, ' ');          // a full stop that is not a decimal point
+  t = wordsToDigits(t);
+  return t.replace(/\s+/g, ' ').trim();
+};
+
+// ── Field finders ──────────────────────────────────────────
+const UNIT_WORDS = 'bags?|sacks?|tins?|kgs?|kilograms?|kilos?';
+const NUM = '(\\d+(?:\\.\\d+)?)';
+const CUR = '(?:kwachas?|kw|k)';
+
+const findPrice = (t) => {
+  const patterns = [
+    new RegExp(`\\b${CUR}\\s*${NUM}(?![\\d.])`),                         // k95, kwacha 95
+    new RegExp(`${NUM}\\s*${CUR}\\b`),                                    // 95 kwacha, 95k
+    new RegExp(`${NUM}\\s*(?:each|per\\s*(?:bag|sack|tin|kg|piece))`),    // 95 each, 95 per bag
+    new RegExp(                                                           // for 95, at 95, price 95
+      `\\b(?:for|at|price|priced|cost|costs|selling)\\s*(?:is\\s*|at\\s*|for\\s*)?${CUR}?\\s*${NUM}(?![\\d.])(?!\\s*(?:${UNIT_WORDS}))`,
+    ),
+  ];
+  for (const re of patterns) {
+    const m = t.match(re);
+    if (m) return m[1];
+  }
+  return '';
+};
+
+const findQuantity = (t) => {
+  // "10 bags", "5 tins". Checked first so "10 bags of 25 kg" gives 10 bags.
+  let m = t.match(/(\d+)\s*(?:x\s*)?(bags?|sacks?|tins?)\b/);
+  if (m) return { quantity: m[1], unit: m[2].startsWith('tin') ? 'tin' : 'bag' };
+
+  // "50 kg", but not "25 kg bags", where 25 kg is the weight of one bag.
+  m = t.match(/(\d+(?:\.\d+)?)\s*(?:kgs?|kilograms?|kilos?)\b(?!\s*(?:bags?|sacks?))/);
+  if (m) return { quantity: m[1], unit: 'kg' };
+
+  return { quantity: '', unit: '' };
+};
+
+const findType = (t) => {
+  if (/\b(hardwood|miombo)\b/.test(t)) return 'Hardwood (Miombo)';
+  if (/\bsoftwood\b/.test(t)) return 'Softwood';
+  if (/\bmixed\b/.test(t)) return 'Mixed';
+  return '';
+};
+
+// Spaces are ignored so "Kalinga linga" still matches Kalingalinga.
+const findArea = (t, areas) => {
+  const compact = t.replace(/[^a-z]/g, '');
+  return areas.find((a) =>
+    a !== 'Other' && compact.includes(a.toLowerCase().replace(/[^a-z]/g, ''))) || '';
+};
+
+const TITLE_BASE = {
+  'Hardwood (Miombo)': 'Hardwood charcoal',
+  Softwood: 'Softwood charcoal',
+  Mixed: 'Mixed charcoal',
+};
+
+const buildTitle = (type, quantity, unit) => {
+  const base = TITLE_BASE[type] || 'Charcoal';
+  if (!quantity) return base;
+  const label = unit === 'kg' ? 'kg' : `${unit}${Number(quantity) === 1 ? '' : 's'}`;
+  return `${base} \u2014 ${quantity} ${label}`;
+};
+
+/**
+ * @param {string}   raw   what the speech recognition heard
+ * @param {string[]} areas allowed neighbourhood names (e.g. NEIGHBOURHOODS)
+ */
+export const parseListingSpeech = (raw, areas = []) => {
+  const text = normalise(raw || '');
+  const price = findPrice(text);
+  const { quantity, unit } = findQuantity(text);
+  const type = findType(text);
+  const area = findArea(text, areas);
+  const mentionsCharcoal = /\bcharcoal\b/.test(text);
+
+  // If nothing listing-related was heard, return an empty title so the UI can say so.
+  const understood = Boolean(price || quantity || type || area || mentionsCharcoal);
+
+  return {
+    rawTranscript: raw,
+    suggestedTitle: understood ? buildTitle(type, quantity, unit) : '',
+    suggestedPrice: price,
+    suggestedQty: quantity,
+    suggestedUnit: unit,
+    suggestedType: type,
+    suggestedNeighbourhood: area,
+  };
+};

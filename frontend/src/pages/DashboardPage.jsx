@@ -110,9 +110,6 @@ export default function DashboardPage() {
     { icon: '💬', label: 'Messages',
       sub: unreadTotal > 0 ? `${unreadTotal} unread` : 'Your inbox',
       path: '/chat', badge: unreadTotal },
-
-    { icon: '🪵', label: 'Become a Seller', sub: 'Post charcoal listings',
-      path: null, action: 'upgrade' },
   ];
 
   const navItems = isSeller ? sellerItems : buyerItems;
@@ -171,32 +168,6 @@ export default function DashboardPage() {
           </div>
           
         </div>
-
-        {/* Buyer upgrade banner */}
-        {!isSeller && (
-          <div className="upgrade-banner">
-            <div>
-              <p className="upgrade-banner__text">Start selling charcoal</p>
-              <p className="upgrade-banner__subtitle">Upgrade to post listings</p>
-            </div>
-            <button onClick={handleUpgrade} disabled={loading} className="upgrade-banner__btn">
-              {loading ? '...' : 'Upgrade →'}
-            </button>
-          </div>
-        )}
-
-        {/* Seller quick post banner only */}
-        {isSeller && (
-          <div className="seller-post-banner">
-            <div>
-              <p className="seller-post-banner__text">Ready to sell?</p>
-              <p className="seller-post-banner__subtitle">Post by voice 🎙️ or type</p>
-            </div>
-            <button onClick={() => navigate('/listings/new')} className="seller-post-banner__btn">
-              + Post →
-            </button>
-          </div>
-        )}
 
         {/* Nav grid  */}
         <div className="nav-grid">
