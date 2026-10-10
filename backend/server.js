@@ -13,12 +13,17 @@ const trustRoutes   = require('./routes/trust');
 const adminRoutes   = require('./routes/admin');
 const { errorHandler } = require('./middleware/errorHandler');
 const { initSocket }   = require('./utils/socket');
+const { getAllowedOrigins } = require('./utils/corsOrigins');
 
 const app        = express();
 const httpServer = http.createServer(app);
 
+// Render and similar hosts sit behind a proxy; needed for correct
+// client IPs in the rate limiters
+app.set('trust proxy', 1);
+
 app.use(cors({
-  origin: ['http://localhost:5173','http://127.0.0.1:5173','http://localhost:3000'],
+  origin: getAllowedOrigins(),
   credentials: true,
 }));
 app.use(express.json());

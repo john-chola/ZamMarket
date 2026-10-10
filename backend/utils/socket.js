@@ -2,13 +2,14 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const Message = require('../models/Message');
 const Conversation = require('../models/Conversation');
+const { getAllowedOrigins } = require('./corsOrigins');
 
 const onlineUsers = new Map();
 
 const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
+      origin: getAllowedOrigins(),
       credentials: true,
     },
   });

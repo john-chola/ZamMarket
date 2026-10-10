@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
@@ -12,7 +12,8 @@ export default function AdminPage() {
   const [stats, setStats]     = useState(null);
   const [users, setUsers]     = useState([]);
   const [listings, setListing] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // Which request the current users/listings belong to; loading is derived
+  const [loadedKey, setLoadedKey] = useState('');
   const [search, setSearch]   = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [msg, setMsg]         = useState('');
@@ -27,21 +28,27 @@ export default function AdminPage() {
     api.get('/admin/stats').then(({ data }) => setStats(data.stats)).catch(() => {});
   }, []);
 
-  // Load users when tab changes
+  // Load users or listings when the tab or filters change
+  const requestKey = `${tab}|${roleFilter}|${search}`;
+  const loading = (tab === 'Users' || tab === 'Listings') && loadedKey !== requestKey;
+
   useEffect(() => {
+    let cancelled = false;
+    const done = () => { if (!cancelled) setLoadedKey(requestKey); };
     if (tab === 'Users') {
-      setLoading(true);
-      api.get(`/admin/users?role=${roleFilter}&search=${search}`)
-        .then(({ data }) => { setUsers(data.users); setLoading(false); })
-        .catch(() => setLoading(false));
+      api.get('/admin/users', { params: { role: roleFilter || undefined, search: search || undefined } })
+        .then(({ data }) => { if (!cancelled) setUsers(data.users); })
+        .catch(() => {})
+        .finally(done);
     }
     if (tab === 'Listings') {
-      setLoading(true);
       api.get('/admin/listings')
-        .then(({ data }) => { setListing(data.listings); setLoading(false); })
-        .catch(() => setLoading(false));
+        .then(({ data }) => { if (!cancelled) setListing(data.listings); })
+        .catch(() => {})
+        .finally(done);
     }
-  }, [tab, roleFilter, search]);
+    return () => { cancelled = true; };
+  }, [tab, roleFilter, search, requestKey]);
 
   const showMsg = (text) => { setMsg(text); setTimeout(() => setMsg(''), 3000); };
 
@@ -113,7 +120,7 @@ export default function AdminPage() {
         <div style={{ display: 'flex', gap: 6, marginBottom: '1.5rem' }}>
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ padding: '7px 18px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, background: tab === t ? 'var(--coal)' : 'white', color: tab === t ? 'white' : 'var(--ash)', border: tab === t ? 'none' : '1px solid var(--border)' }}>
+              style={{ padding: '7px 18px', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 500, background: tab === t ? 'var(--coal)' : 'white', color: tab === t ? 'white' : 'var(--ash)', border: tab === t ? 'none' : '1px solid var(--border)' }}>
               {t}
             </button>
           ))}

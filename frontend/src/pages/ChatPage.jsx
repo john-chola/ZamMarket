@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -146,28 +146,6 @@ export default function ChatPage() {
     };
   }, [conversationId, token, dispatch]);
 
-  // Online/offline detection
-  useEffect(() => {
-    const handleOnline = async () => {
-      dispatch(setOnline(true));
-      await flushOfflineQueue();
-    };
-    const handleOffline = () => dispatch(setOnline(false));
-    window.addEventListener('online',  handleOnline);
-    window.addEventListener('offline', handleOffline);
-    dispatch(setOnline(navigator.onLine));
-    getQueuedMessages().then((q) => dispatch(setPendingCount(q.length)));
-    return () => {
-      window.removeEventListener('online',  handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [dispatch]);
-
-  // Auto-scroll
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   // Flush offline queue
   const flushOfflineQueue = useCallback(async () => {
     const queued = await getQueuedMessages();
@@ -184,6 +162,28 @@ export default function ChatPage() {
     const remaining = await getQueuedMessages();
     dispatch(setPendingCount(remaining.length));
   }, [dispatch]);
+
+  // Online/offline detection
+  useEffect(() => {
+    const handleOnline = async () => {
+      dispatch(setOnline(true));
+      await flushOfflineQueue();
+    };
+    const handleOffline = () => dispatch(setOnline(false));
+    window.addEventListener('online',  handleOnline);
+    window.addEventListener('offline', handleOffline);
+    dispatch(setOnline(navigator.onLine));
+    getQueuedMessages().then((q) => dispatch(setPendingCount(q.length)));
+    return () => {
+      window.removeEventListener('online',  handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [dispatch, flushOfflineQueue]);
+
+  // Auto-scroll
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Typing indicator
   const handleTyping = (val) => {

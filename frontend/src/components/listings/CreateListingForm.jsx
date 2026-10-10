@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createListing, clearError, clearCreateSuccess } from '../../store/slices/listingSlice';
+import { NEIGHBOURHOODS } from '../../utils/validation';
 import './CreateListingForm.css';
 
 const UNITS = ['bag', 'tin', 'kg'];
@@ -14,18 +15,24 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
   const [pricePerBag,       setPricePerBag]       = useState('');
   const [unit,              setUnit]              = useState('bag');
   const [quantityAvailable, setQuantityAvailable] = useState('');
-  const [neighbourhood,     setNeighbourhood]     = useState(user?.neighbourhood || '');
+  const [neighbourhood,     setNeighbourhood]     = useState(
+    NEIGHBOURHOODS.includes(user?.neighbourhood) ? user.neighbourhood : 'Other'
+  );
   const [description,       setDescription]       = useState('');
   const [imageFile,         setImageFile]         = useState(null);
   const [imagePreview,      setImagePreview]      = useState(null);
 
-  useEffect(() => {
-    if (!voicePrefill) return;
+  // Apply a new voice result once, during render (no effect needed);
+  // fields the seller already typed are kept unless voice filled them
+  const [appliedPrefill, setAppliedPrefill] = useState(null);
+  if (voicePrefill && voicePrefill !== appliedPrefill) {
+    setAppliedPrefill(voicePrefill);
     if (voicePrefill.suggestedTitle) setTitle(voicePrefill.suggestedTitle);
     if (voicePrefill.suggestedPrice) setPricePerBag(voicePrefill.suggestedPrice);
     if (voicePrefill.suggestedQty)   setQuantityAvailable(voicePrefill.suggestedQty);
+    if (UNITS.includes(voicePrefill.suggestedUnit)) setUnit(voicePrefill.suggestedUnit);
     if (voicePrefill.suggestedNeighbourhood) setNeighbourhood(voicePrefill.suggestedNeighbourhood);
-  }, [voicePrefill]);
+  }
 
   useEffect(() => {
     if (createSuccess) { dispatch(clearCreateSuccess()); onSuccess?.(); }
@@ -152,14 +159,12 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
             <span className="voice-badge--inline"> 🎙</span>
           )}
         </label>
-        <input
-          type="text"
-          placeholder="e.g. Kalingalinga, Lusaka CBD, Kanyama..."
-          value={neighbourhood}
-          onChange={(e) => setNeighbourhood(e.target.value)}
-          required
-          maxLength={100}
-        />
+        {/* Must be one of the backend's neighbourhood values */}
+        <select value={neighbourhood} onChange={(e) => setNeighbourhood(e.target.value)} required>
+          {NEIGHBOURHOODS.map((n) => (
+            <option key={n} value={n}>{n.replace('_', ' ')}</option>
+          ))}
+        </select>
       </div>
 
       {/* Description */}

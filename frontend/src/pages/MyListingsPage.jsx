@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchMyListings, updateListingStatus, deleteListing } from '../store/slices/listingSlice';
@@ -9,7 +9,6 @@ export default function MyListingsPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { myListings, myLoading, error } = useSelector((s) => s.listings);
-  const { user } = useSelector((s) => s.auth);
 
   useEffect(() => {
     dispatch(fetchMyListings());

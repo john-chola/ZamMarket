@@ -85,16 +85,20 @@
 
 .search-input {
   flex: 1;
+  min-width: 0;
   font-size: 14px;
 }
 
-.search-btn {
+/* Two classes so this beats the global .btn { width: 100% }
+   whatever order the stylesheets load in */
+.search-form .search-btn {
   width: auto;
+  flex: 0 0 auto;
   padding: 10px 14px;
 }
 
 @media (min-width: 480px) {
-  .search-btn {
+  .search-form .search-btn {
     padding: 11px 16px;
   }
 }

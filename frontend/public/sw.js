@@ -1,19 +1,21 @@
 // ZamMarket Service Worker — Sprint 3
 // Offline-first PWA: cache listings, enable offline create + message queue
 
-const CACHE_NAME    = 'zammarket-v1';
-const API_CACHE     = 'zammarket-api-v1';
-const OFFLINE_QUEUE = 'zammarket-offline-queue';
+// Bump the version whenever caching rules change: old caches are deleted on activate
+const CACHE_NAME    = 'zammarket-v2';
+const API_CACHE     = 'zammarket-api-v2';
 
-// Static assets to cache on install
+// App shell cached on install. Vite's hashed JS/CSS files are cached
+// the first time they load (see cacheFirstStatic).
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/src/index.jsx',
-  '/src/App.jsx',
-  '/src/index.css',
-  'https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Noto+Sans:wght@400;500&display=swap',
+  '/manifest.json',
+  '/favicon.svg',
 ];
+
+// Never cached: auth responses and admin data
+const NO_CACHE_API = ['/api/auth/', '/api/admin/'];
 
 // ── Install: cache static shell ────────────────────────────
 self.addEventListener('install', (e) => {
@@ -53,11 +55,23 @@ self.addEventListener('fetch', (e) => {
   // Skip browser-extension and chrome-extension requests
   if (!url.protocol.startsWith('http')) return;
 
-  // API requests — network first, fall back to cache
+  // API requests (same origin in dev, the hosted API in production)
+  // — network first, fall back to cache
   if (url.pathname.startsWith('/api/')) {
+    if (NO_CACHE_API.some((p) => url.pathname.startsWith(p))) return;
     e.respondWith(networkFirstAPI(request));
     return;
   }
+
+  // Page navigations — network first so a new deploy is picked up,
+  // falling back to the cached app shell when offline
+  if (request.mode === 'navigate') {
+    e.respondWith(networkFirstPage(request));
+    return;
+  }
+
+  // Only cache our own static files
+  if (url.origin !== self.location.origin) return;
 
   // Static assets — cache first, fall back to network
   e.respondWith(cacheFirstStatic(request));
@@ -92,6 +106,21 @@ async function networkFirstAPI(request) {
       JSON.stringify({ status: 'error', message: 'You are offline', offline: true }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
     );
+  }
+}
+
+// Network first for HTML pages, cached shell when offline
+async function networkFirstPage(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put('/index.html', response.clone());
+    }
+    return response;
+  } catch {
+    const fallback = await caches.match('/index.html');
+    return fallback || new Response('Offline', { status: 503 });
   }
 }
 

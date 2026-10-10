@@ -7,7 +7,9 @@ export const getSocket = () => socket;
 export const initSocket = (token) => {
   if (socket?.connected) return socket;
 
-  socket = io('http://localhost:5000', {
+  // Production: VITE_SOCKET_URL points at the hosted API.
+  // Development: same origin, forwarded by the Vite proxy.
+  socket = io(import.meta.env.VITE_SOCKET_URL || undefined, {
     auth: { token },
     reconnection: true,
     reconnectionDelay: 1000,

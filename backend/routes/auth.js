@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
-const { otpLimiter, authLimiter } = require('../middleware/rateLimiter');
+const { otpLimiter, authLimiter, registerLimiter } = require('../middleware/rateLimiter');
 
 // Public routes
 router.post('/request-otp', otpLimiter, authController.requestOTP);
-router.post('/register', authController.register);
+router.post('/register', registerLimiter, authController.register);
 router.post('/login', authLimiter, authController.login);
 
 // Protected routes (JWT required)

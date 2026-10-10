@@ -22,6 +22,8 @@ const trustChainSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-trustChainSchema.index({ seller: 1, blockIndex: 1 });
+// Unique: two events written at the same moment cannot both claim
+// the same position (which would fork the chain)
+trustChainSchema.index({ seller: 1, blockIndex: 1 }, { unique: true });
 
 module.exports = mongoose.model('TrustChain', trustChainSchema);

@@ -180,6 +180,20 @@ Check the backend terminal when registering.
 
 ---
 
+### 5. Create the first admin
+
+Admins cannot sign up through the app. Create one from the `backend` folder:
+
+```bash
+npm run create-admin -- --phone 0971234567 --name "Site Admin" --password "your-strong-password"
+```
+
+If the phone number is already registered, that account is promoted to admin instead. Then log in with that phone number and password and open `/admin` (or tap the admin button on the dashboard).
+
+> **Where is my data in Atlas?** The database called `admin` in MongoDB Atlas is MongoDB's own system database and is always empty for apps. ZamMarket's data lives in the database named at the end of `MONGODB_URI` (e.g. `.../zammarket`), in collections such as `users`, `listings` and `trustchains`.
+
+---
+
 ## 📡 API Endpoints
 
 | Method | Endpoint | Description | Auth |
@@ -225,9 +239,17 @@ Build Command:  npm install
 Start Command:  node server.js
 
 Environment Variables:
-  PORT, NODE_ENV, MONGODB_URI, JWT_SECRET,
-  JWT_EXPIRES_IN, CLOUDINARY_*, FRONTEND_URL
+  PORT, NODE_ENV=production, MONGODB_URI, JWT_SECRET,
+  JWT_EXPIRES_IN, CLOUDINARY_*,
+  FRONTEND_URL = https://your-app.vercel.app   (comma-separate several URLs)
 ```
+
+**Checklist when deploying**
+- `FRONTEND_URL` on Render must exactly match the Vercel address (no trailing path), or the browser blocks API and chat requests (CORS).
+- `VITE_API_URL` and `VITE_SOCKET_URL` on Vercel must point at the Render address. Redeploy the frontend after changing them, because Vite builds them into the app.
+- In MongoDB Atlas → Network Access, allow Render to connect (e.g. `0.0.0.0/0`), or the backend exits with "MongoDB failed".
+- `frontend/vercel.json` sends every page route to `index.html`, so refreshing `/dashboard` works.
+- Render's free tier sleeps when idle; the first request after a pause can take about a minute.
 
 ---
 
@@ -267,13 +289,14 @@ zammarket/
 ## 🧪 Testing
 
 ```bash
-# Backend unit tests
+# Backend: trust chain, auth, rating rules, CORS (no database needed)
 cd backend
 npm test
 
-# Frontend component tests
+# Frontend: lint + voice listing parser
 cd frontend
-npm test
+npm run lint
+npm run test:voice
 
 # Lighthouse performance audit
 # Open Chrome → DevTools → Lighthouse → Generate report

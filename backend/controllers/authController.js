@@ -38,6 +38,12 @@ exports.register = async (req, res, next) => {
       });
     }
 
+    // Only buyer and seller accounts can be created here.
+    // Admins are created with `npm run create-admin` (scripts/createAdmin.js).
+    if (role && !['buyer', 'seller'].includes(role)) {
+      return res.status(400).json({ status: 'error', message: 'Role must be buyer or seller' });
+    }
+
     // Check phone not already registered
     const existing = await User.findOne({ phone });
     if (existing) {

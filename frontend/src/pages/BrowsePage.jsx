@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchListings } from '../store/slices/listingSlice';
@@ -13,7 +13,6 @@ export default function BrowsePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { items, loading, error, pagination } = useSelector((s) => s.listings);
-  const { user } = useSelector((s) => s.auth);
 
   const [neighbourhood, setNeighbourhood] = useState(
     searchParams.get('neighbourhood') || 'All'
