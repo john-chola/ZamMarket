@@ -24,6 +24,7 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
     if (voicePrefill.suggestedTitle) setTitle(voicePrefill.suggestedTitle);
     if (voicePrefill.suggestedPrice) setPricePerBag(voicePrefill.suggestedPrice);
     if (voicePrefill.suggestedQty)   setQuantityAvailable(voicePrefill.suggestedQty);
+    if (UNITS.includes(voicePrefill.suggestedUnit)) setUnit(voicePrefill.suggestedUnit);
     if (voicePrefill.suggestedNeighbourhood) setNeighbourhood(voicePrefill.suggestedNeighbourhood);
   }, [voicePrefill]);
 

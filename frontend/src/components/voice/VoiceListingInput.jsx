@@ -1,221 +1,160 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { parseListing, parseBestAlternative } from './parseListing';
 import './VoiceListingInput.css';
 
-// ── Nyanja / Bemba keyword mappings ───────────────────────
-const KEYWORD_MAP = {
-  // Nyanja numbers
-  'imodzi': '1', 'iwiri': '2', 'itatu': '3', 'inayi': '4', 'isanu': '5',
-  'isanu ndi imodzi': '6', 'isanu ndi iwiri': '7', 'isanu ndi itatu': '8',
-  // Bemba numbers
-  'cimo': '1', 'fibili': '2', 'fitatu': '3', 'fine': '4', 'fisano': '5', 'mutanda': '6', 'cine lubala': '7', 'cine konsekonse': '8', 'pabula': '9', 'ikumi linmo': '10',
-  // Nyanja charcoal terms
-  'maalasha': 'charcoal', 'masaka': 'bags', 'saka': 'bag',
-  // Bemba charcoal terms
-  'amalaasha': 'charcoal', 'amasaka': 'bags', 'isaka': 'bag',
-  // Common price words
-  'kwacha': 'K', 'ngwe': '',
-  // Units
-  'umufuko': 'bag', 'tini': 'tin', 'kilogram': 'kg',
+// Browsers only recognise English reliably for this use; Nyanja and
+// Bemba are not offered by any browser's speech service.
+const LANGUAGES = [
+  { code: 'en-GB', label: 'English (UK)' },
+  { code: 'en-US', label: 'English (US)' },
+];
+
+const MAX_LISTEN_MS = 15000; // safety stop if the browser never ends the session
+
+const ERROR_MESSAGES = {
+  'not-allowed': 'Microphone access denied. Allow the microphone in your browser settings.',
+  'service-not-allowed': 'Voice input is blocked in this browser. Please type your listing instead.',
+  'audio-capture': 'No microphone was found. Check that your phone or computer has one.',
+  'no-speech': 'No speech detected. Tap the microphone and speak clearly.',
+  'network': 'Voice input needs an internet connection. Check your data and try again.',
+  'language-not-supported': 'This browser does not support that language. Try English (UK).',
 };
 
-const applyKeywordMap = (transcript) => {
-  let result = transcript.toLowerCase().trim();
-  Object.entries(KEYWORD_MAP).forEach(([local, english]) => {
-    result = result.replace(new RegExp(`\\b${local}\\b`, 'gi'), english);
-  });
-  return result.replace(/\s+/g, ' ');
-};
+const getRecognitionClass = () =>
+  typeof window === 'undefined' ? null : window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
-// Try to extract price from transcript
-const extractPrice = (text) => {
-  const patterns = [
-    /K\s*(\d+)/i,
-    /(\d+)\s*K(?:\s|$)/i,
-    /kwacha\s*(\d+)/i,
-    /(\d+)\s*kwacha/i,
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) return match[1];
-  }
-  return '';
-};
+const neighbourhoodLabel = (value) => (value === 'Lusaka_CBD' ? 'Lusaka CBD' : value);
 
-// Try to extract quantity from transcript
-const extractQuantity = (text) => {
-  const patterns = [
-    /(\d+)\s*(?:bags?|tins?|kg)/i,
-    /(\d+)\s*(?:amasaka|umufuko|tini)/i,
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) return match[1];
+// Join the n-th alternative of every result into one candidate sentence
+const collectAlternatives = (results) => {
+  const count = Math.max(...Array.from(results, (r) => r.length), 1);
+  const alternatives = [];
+  for (let j = 0; j < count; j++) {
+    const sentence = Array.from(results, (r) => (r[j] || r[0])?.transcript || '').join(' ').trim();
+    if (sentence && !alternatives.includes(sentence)) alternatives.push(sentence);
   }
-  return '';
-};
-
-// Extract title - improved regex to preserve product names
-const extractTitle = (text) => {
-  if (text.includes('charcoal')) {
-    const charcoalIndex = text.indexOf('charcoal');
-    const start = Math.max(0, charcoalIndex - 20);
-    const end = Math.min(text.length, charcoalIndex + 50);
-    const context = text.substring(start, end).trim();
-    // Remove only: digits, 'bag'/'bags'/'tin'/'tins'/'kg', 'K', 'each', and commas
-    const cleaned = context
-      .replace(/\b(?:bags?|tins?|kg|K|each)\b/gi, '')
-      .replace(/\d+/g, '')
-      .replace(/[,]/g, '')
-      .trim();
-    if (cleaned.length > 3) return cleaned.substring(0, 60);
-    return 'Charcoal';
-  }
-  const words = text.split(/\s+/).filter(w => w.length > 2);
-  if (words.length > 0) {
-    return words.slice(0, 3).join(' ').substring(0, 60);
-  }
-  return '';
-};
-
-// Extract neighbourhood/location from transcript
-const extractNeighbourhood = (text) => {
-  // Common Lusaka neighbourhoods
-  const neighbourhoods = [
-    'kalingalinga', 'kanyama', 'mtendere', 'chilenje',
-    'matero', 'bauleni', 'chelstone', 'woodlands',
-    'kabwata', 'libala', 'lusaka cbd', 'city center',
-  ];
-  
-  const lowerText = text.toLowerCase();
-  for (const neighbourhood of neighbourhoods) {
-    if (lowerText.includes(neighbourhood)) {
-      return neighbourhood.charAt(0).toUpperCase() + neighbourhood.slice(1);
-    }
-  }
-  
-  return '';
+  return alternatives;
 };
 
 export default function VoiceListingInput({ onResult, onClose }) {
-  const [phase, setPhase] = useState('idle'); // idle | listening | processing | done | error
-  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
+  const [phase, setPhase] = useState('idle'); // idle | listening | done | error
+  const [language, setLanguage] = useState('en-GB');
+  const [liveText, setLiveText] = useState('');
   const [transcript, setTranscript] = useState('');
-  const [extracted, setExtracted] = useState({});
   const [errorMsg, setErrorMsg] = useState('');
-  const [supported, setSupported] = useState(true);
+
   const recognitionRef = useRef(null);
-  const lastTranscriptRef = useRef('');
+  const alternativesRef = useRef([]);
+  const errorRef = useRef(null);
+  const timerRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  const RecognitionClass = getRecognitionClass();
+  const parsed = transcript ? parseListing(transcript) : null;
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSupported(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US'; // Default, will be updated on start
-    recognition.maxAlternatives = 3;
-
-    recognition.onresult = (e) => {
-      let interim = '';
-      let final = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final += t;
-        else interim += t;
-      }
-      const finalTranscript = final || interim;
-      lastTranscriptRef.current = finalTranscript;
-      setTranscript(finalTranscript);
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(timerRef.current);
+      recognitionRef.current?.abort();
     };
-
-    recognition.onend = () => {
-      if (lastTranscriptRef.current.trim()) {
-        processTranscript(lastTranscriptRef.current);
-      } else {
-        setErrorMsg('No speech detected. Please try again.');
-        setPhase('error');
-      }
-    };
-
-    recognition.onerror = (e) => {
-      console.error('Speech error:', e.error);
-      const msgs = {
-        'not-allowed': 'Microphone access denied. Please allow microphone in browser settings.',
-        'no-speech': 'No speech detected. Please try again.',
-        'network': 'Network error. Please try again.',
-        'aborted': 'Listening stopped.',
-      };
-      setErrorMsg(msgs[e.error] || `Speech error: ${e.error}`);
-      setPhase('error');
-    };
-
-    recognitionRef.current = recognition;
-    return () => recognition.abort();
   }, []);
 
-  const processTranscript = (finalTranscript) => {
-    setPhase('processing');
-    
-    setTimeout(() => {
-      const mapped = applyKeywordMap(finalTranscript);
-      const result = {
-        rawTranscript: finalTranscript,
-        mappedText: mapped,
-        suggestedTitle: extractTitle(mapped),
-        suggestedPrice: extractPrice(mapped),
-        suggestedQty: extractQuantity(mapped),
-        suggestedNeighbourhood: extractNeighbourhood(mapped),
-      };
-      setExtracted(result);
-      setPhase('done');
-    }, 300);
+  const fail = (message) => {
+    setErrorMsg(message);
+    setPhase('error');
   };
 
   const startListening = () => {
-    if (!recognitionRef.current) return;
-    
-    // Set language before starting
-    recognitionRef.current.lang = selectedLanguage;
-    
+    if (!RecognitionClass) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      fail(ERROR_MESSAGES.network);
+      return;
+    }
+
+    // A fresh instance per attempt avoids stuck sessions on Android Chrome
+    recognitionRef.current?.abort();
+    const recognition = new RecognitionClass();
+    recognition.lang = language;
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
+
+    alternativesRef.current = [];
+    errorRef.current = null;
+
+    recognition.onresult = (e) => {
+      const alternatives = collectAlternatives(e.results);
+      alternativesRef.current = alternatives;
+      if (mountedRef.current) setLiveText(alternatives[0] || '');
+    };
+
+    recognition.onerror = (e) => {
+      // 'aborted' happens when we stop it ourselves — not a user-facing error
+      if (e.error === 'aborted') return;
+      errorRef.current = ERROR_MESSAGES[e.error] || `Voice input failed (${e.error}). Please try again or type instead.`;
+    };
+
+    recognition.onend = () => {
+      clearTimeout(timerRef.current);
+      if (!mountedRef.current || recognitionRef.current !== recognition) return;
+      const best = parseBestAlternative(alternativesRef.current);
+      if (best) {
+        setTranscript(best.transcript);
+        setPhase('done');
+      } else {
+        fail(errorRef.current || ERROR_MESSAGES['no-speech']);
+      }
+    };
+
+    recognitionRef.current = recognition;
+    setLiveText('');
     setTranscript('');
-    lastTranscriptRef.current = '';
-    setExtracted({});
     setErrorMsg('');
     setPhase('listening');
-    recognitionRef.current.start();
+
+    try {
+      recognition.start();
+      timerRef.current = setTimeout(() => recognition.stop(), MAX_LISTEN_MS);
+    } catch {
+      fail('Could not start the microphone. Please try again.');
+    }
   };
 
   const stopListening = () => {
+    clearTimeout(timerRef.current);
     recognitionRef.current?.stop();
   };
 
+  const handleClose = () => {
+    recognitionRef.current?.abort();
+    onClose();
+  };
+
   const handleUse = () => {
-    const filtered = {
-      suggestedTitle: extracted.suggestedTitle || '',
-      suggestedPrice: extracted.suggestedPrice || '',
-      suggestedQty: extracted.suggestedQty || '',
-      suggestedNeighbourhood: extracted.suggestedNeighbourhood || '',
-    };
-    onResult(filtered);
+    if (!parsed) return;
+    onResult({
+      suggestedTitle: parsed.title || '',
+      suggestedPrice: parsed.price !== null ? String(parsed.price) : '',
+      suggestedQty: parsed.quantity !== null ? String(parsed.quantity) : '',
+      suggestedUnit: parsed.unit || '',
+      suggestedNeighbourhood: parsed.neighbourhood || '',
+    });
     onClose();
   };
 
   const handleRetry = () => {
     setPhase('idle');
     setTranscript('');
-    lastTranscriptRef.current = '';
-    setExtracted({});
+    setLiveText('');
   };
 
-  if (!supported) return (
+  if (!RecognitionClass) return (
     <div className="voice-listing-unsupported">
       <div className="voice-listing-unsupported-icon">🎤</div>
       <p className="voice-listing-unsupported-text">
-        Voice input is not supported in this browser. Please use Chrome or Edge.
+        Voice input is not supported in this browser. Please use Chrome, Edge or Safari, or type your listing.
       </p>
       <button onClick={onClose} className="btn btn-outline voice-listing-unsupported-button">
         Use Text Input
@@ -223,107 +162,98 @@ export default function VoiceListingInput({ onResult, onClose }) {
     </div>
   );
 
+  const fields = parsed ? [
+    { label: 'Title', value: parsed.title },
+    { label: 'Price', value: parsed.price !== null ? `K${parsed.price}` : null },
+    { label: 'Quantity', value: parsed.quantity },
+    { label: 'Unit', value: parsed.unit },
+    { label: 'Location', value: parsed.neighbourhood && neighbourhoodLabel(parsed.neighbourhood) },
+  ] : [];
+  const found = fields.filter((f) => f.value !== null && f.value !== '');
+  const missing = fields.filter((f) => f.value === null || f.value === '').map((f) => f.label.toLowerCase());
+
   return (
     <div className="voice-listing-container">
       <div className="voice-listing-header">
         <h3 className="voice-listing-title">Voice Listing</h3>
-        <button onClick={onClose} className="voice-listing-close-btn">✕</button>
+        <button onClick={handleClose} className="voice-listing-close-btn" aria-label="Close voice input">✕</button>
       </div>
 
       <p className="voice-listing-instructions">
-        Speak your listing in <strong>English, Nyanja, or Bemba</strong>.<br />
-        Example: <em>"charcoal, 10 bags, K95 each, Kanyama"</em>
+        Say the <strong>quantity, price and area</strong> in English.<br />
+        Example: <em>"Charcoal, 10 bags, K95 each, Kanyama"</em>
       </p>
 
-      {/* Language selector */}
       {(phase === 'idle' || phase === 'error') && (
-        <div className="voice-listing-language-group">
-          <label className="voice-listing-language-label">Language</label>
-          <select 
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="voice-listing-language-select"
-          >
-            <option value="en-US">English (United States)</option>
-            <option value="en-GB">English (United Kingdom)</option>
-            <option value="ny-ZM">Nyanja (Zambia)</option>
-            <option value="bem-ZM">Bemba (Zambia)</option>
-          </select>
-          <p className="voice-listing-language-hint">
-            ⓘ Bemba/Nyanja support varies by browser. Chrome on Android has best support.
-          </p>
-        </div>
+        <>
+          <div className="voice-listing-language-group">
+            <label className="voice-listing-language-label" htmlFor="voice-language">Language</label>
+            <select
+              id="voice-language"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="voice-listing-language-select"
+            >
+              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+            <p className="voice-listing-language-hint">
+              ⓘ Needs an internet connection. Numbers can be said as words, e.g. "ninety five kwacha".
+            </p>
+          </div>
+
+          <div className="voice-listing-mic-container">
+            <button onClick={startListening} className="voice-listing-mic-button" aria-label="Start speaking">🎙️</button>
+            <p className="voice-listing-mic-label">Tap to speak</p>
+          </div>
+        </>
       )}
 
-      {/* Mic button */}
-      {(phase === 'idle' || phase === 'error') && (
-        <div className="voice-listing-mic-container">
-          <button onClick={startListening} className="voice-listing-mic-button">🎙️</button>
-          <p className="voice-listing-mic-label">Tap to speak</p>
-        </div>
-      )}
-
-      {/* Listening animation */}
       {phase === 'listening' && (
         <div className="voice-listing-listening-container">
-          <button onClick={stopListening} className="voice-listing-listening-button">🎙️</button>
+          <button onClick={stopListening} className="voice-listing-listening-button" aria-label="Stop listening">🎙️</button>
           <p className="voice-listing-listening-status">Listening... tap to stop</p>
-          <p className="voice-listing-language-display">
-            Language: {selectedLanguage === 'en-US' ? 'English (US)' : selectedLanguage === 'en-GB' ? 'English (UK)' : selectedLanguage === 'ny-ZM' ? 'Nyanja' : 'Bemba'}
-          </p>
-          {transcript && (
-            <p className="voice-listing-transcript-preview">"{transcript}"</p>
-          )}
+          {liveText && <p className="voice-listing-transcript-preview">"{liveText}"</p>}
         </div>
       )}
 
-      {/* Processing */}
-      {phase === 'processing' && (
-        <div className="voice-listing-processing-container">
-          <div className="voice-listing-spinner" />
-          <p className="voice-listing-processing-text">Processing speech...</p>
-        </div>
-      )}
+      {phase === 'error' && <div className="voice-listing-error">{errorMsg}</div>}
 
-      {/* Error */}
-      {phase === 'error' && (
-        <div className="voice-listing-error">{errorMsg}</div>
-      )}
-
-      {/* Results */}
-      {phase === 'done' && (
+      {phase === 'done' && parsed && (
         <div className="voice-listing-results">
           <div className="voice-listing-raw-transcript">
-            <p className="voice-listing-raw-label">You said</p>
-            <p className="voice-listing-raw-text">"{extracted.rawTranscript}"</p>
+            <label className="voice-listing-raw-label" htmlFor="voice-transcript">
+              You said — fix any mistakes here
+            </label>
+            <textarea
+              id="voice-transcript"
+              className="voice-listing-edit-input"
+              value={transcript}
+              onChange={(e) => setTranscript(e.target.value)}
+              rows={2}
+            />
           </div>
 
-          {/* Show detected fields */}
-          <div className="voice-listing-fields-grid">
-            {[
-              extracted.suggestedTitle && { label: 'Title detected', value: extracted.suggestedTitle },
-              extracted.suggestedPrice && { label: 'Price detected', value: `K${extracted.suggestedPrice}` },
-              extracted.suggestedQty && { label: 'Quantity detected', value: extracted.suggestedQty },
-              extracted.suggestedNeighbourhood && { label: 'Location detected', value: extracted.suggestedNeighbourhood },
-            ].filter(Boolean).map(({ label, value }) => (
-              <div key={label} className="voice-listing-field-item">
-                <span className="voice-listing-field-label">{label}</span>
-                <span className="voice-listing-field-value">{value}</span>
-              </div>
-            ))}
-          </div>
+          {found.length > 0 && (
+            <div className="voice-listing-fields-grid">
+              {found.map(({ label, value }) => (
+                <div key={label} className="voice-listing-field-item">
+                  <span className="voice-listing-field-label">{label}</span>
+                  <span className="voice-listing-field-value">{value}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
-          {/* Show partial match warning */}
-          {!extracted.suggestedTitle && (
+          {missing.length > 0 && (
             <div className="voice-listing-warning">
               <p className="voice-listing-warning-text">
-                ℹ️ Could not fully extract details. Fill in the rest manually.
+                ℹ️ Not detected: {missing.join(', ')}. Edit the text above, retry, or fill these in on the form.
               </p>
             </div>
           )}
 
           <div className="voice-listing-actions">
-            <button onClick={handleUse} className="btn btn-ember voice-listing-use-button">
+            <button onClick={handleUse} className="btn btn-ember voice-listing-use-button" disabled={found.length === 0}>
               ✅ Use This
             </button>
             <button onClick={handleRetry} className="btn btn-outline voice-listing-retry-button">
