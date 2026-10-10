@@ -229,7 +229,7 @@ export default function VoiceListingInput({ onResult, onClose }) {
               className="voice-listing-edit-input"
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
-              rows={2}
+              rows={3}
             />
           </div>
 
