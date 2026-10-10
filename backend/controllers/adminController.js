@@ -3,6 +3,8 @@ const Listing     = require('../models/Listing');
 const Conversation = require('../models/Conversation');
 const TrustChain  = require('../models/TrustChain');
 const { addTrustEvent } = require('./trustController');
+const { deleteImage } = require('../utils/cloudinary');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 // ── GET /api/admin/stats ───────────────────────────────────
 exports.getStats = async (req, res, next) => {
@@ -41,9 +43,10 @@ exports.getUsers = async (req, res, next) => {
     const filter = {};
     if (role) filter.role = role;
     if (search) {
+      const pattern = escapeRegex(String(search));
       filter.$or = [
-        { name:  { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } },
+        { name:  { $regex: pattern, $options: 'i' } },
+        { phone: { $regex: pattern, $options: 'i' } },
       ];
     }
     const skip  = (Number(page) - 1) * Number(limit);
@@ -117,6 +120,7 @@ exports.removeListing = async (req, res, next) => {
   try {
     const listing = await Listing.findById(req.params.id);
     if (!listing) return res.status(404).json({ status: 'error', message: 'Listing not found' });
+    await deleteImage(listing.image?.publicId);
     await listing.deleteOne();
     res.json({ status: 'success', message: 'Listing removed by admin' });
   } catch (err) { next(err); }

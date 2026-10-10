@@ -1,6 +1,7 @@
 const Listing = require('../models/Listing');
 const { uploadImage, deleteImage } = require('../utils/cloudinary');
 const { addTrustEvent } = require('./trustController');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 exports.createListing = async (req, res, next) => {
   try {
@@ -48,10 +49,11 @@ exports.getListings = async (req, res, next) => {
     const filter = { status: 'active' };
     if (neighbourhood && neighbourhood !== 'All') filter.neighbourhood = neighbourhood;
     if (search) {
+      const pattern = escapeRegex(String(search));
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { charcoalType: { $regex: search, $options: 'i' } },
+        { title: { $regex: pattern, $options: 'i' } },
+        { description: { $regex: pattern, $options: 'i' } },
+        { charcoalType: { $regex: pattern, $options: 'i' } },
       ];
     }
     const skip  = (Number(page) - 1) * Number(limit);
