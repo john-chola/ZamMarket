@@ -180,6 +180,20 @@ Check the backend terminal when registering.
 
 ---
 
+### 5. Create the first admin
+
+Admins cannot sign up through the app. Create one from the `backend` folder:
+
+```bash
+npm run create-admin -- --phone 0971234567 --name "Site Admin" --password "your-strong-password"
+```
+
+If the phone number is already registered, that account is promoted to admin instead. Then log in with that phone number and password and open `/admin` (or tap the admin button on the dashboard).
+
+> **Where is my data in Atlas?** The database called `admin` in MongoDB Atlas is MongoDB's own system database and is always empty for apps. ZamMarket's data lives in the database named at the end of `MONGODB_URI` (e.g. `.../zammarket`), in collections such as `users`, `listings` and `trustchains`.
+
+---
+
 ## 📡 API Endpoints
 
 | Method | Endpoint | Description | Auth |
