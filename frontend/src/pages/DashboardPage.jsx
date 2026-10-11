@@ -27,7 +27,7 @@ function OfflineBanner() {
       <div>
         <p className="offline-banner__title">You are offline</p>
         <p className="offline-banner__subtitle">
-          Messages will queue and send when reconnected.
+          Messages and new listings are saved and sent when you reconnect.
         </p>
       </div>
     </div>

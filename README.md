@@ -33,7 +33,7 @@ To design, develop, and evaluate a progressive web application for local Zambian
 - 📦 Manage listings (edit, mark as sold, pause, delete)
 - 💬 Real-time chat with buyers
 - 🔗 Build a blockchain-verified trust score
-- 📵 Works offline — listings sync when reconnected
+- 📵 Works offline — listings created offline (with photos) are posted automatically when reconnected
 
 ### For Buyers
 - 🔍 Browse charcoal listings with neighbourhood and price filters
