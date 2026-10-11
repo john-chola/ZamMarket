@@ -153,6 +153,7 @@
   .trust-score-value.trusted  { color: var(--green); }
   .trust-score-value.building { color: var(--ember); }
   .trust-score-value.new      { color: var(--trust-new); }
+  .trust-score-value.tampered { color: var(--red-dark); }
   
   .trust-score-out-of {
     font-size: 13px;
@@ -167,6 +168,7 @@
   .trust-score-label.trusted  { color: var(--green); }
   .trust-score-label.building { color: var(--ember); }
   .trust-score-label.new      { color: var(--trust-new); }
+  .trust-score-label.tampered { color: var(--red-dark); }
   
   /* Progress bar */
   .trust-progress-bar {
@@ -184,6 +186,7 @@
   .trust-progress-fill.trusted  { background: var(--green); }
   .trust-progress-fill.building { background: var(--ember); }
   .trust-progress-fill.new      { background: var(--trust-new); }
+  .trust-progress-fill.tampered { background: var(--red-dark); }
   
   /* Stats grid */
   .trust-stats-grid {
@@ -451,3 +454,20 @@
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+/* ── Tamper warning ───────────────────────────────────── */
+.trust-tamper-card {
+  background: var(--red-light);
+  border: 1px solid var(--red-dark);
+  margin-bottom: 1rem;
+}
+.trust-tamper-title {
+  font-weight: 600;
+  color: var(--red-dark);
+  margin: 0 0 6px;
+}
+.trust-tamper-text {
+  font-size: 14px;
+  color: var(--coal);
+  line-height: 1.5;
+  margin: 0;
+}

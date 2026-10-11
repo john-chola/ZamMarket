@@ -102,8 +102,11 @@ export default function TrustScorePage() {
     if (score >= 40) return 'building';
     return 'new';
   };
-  const scoreCategory = getScoreCategory(score);
-  const scoreLabel = score >= 70 ? 'Trusted Seller'
+  // A broken chain means the record was altered: the score cannot be trusted
+  const tampered = isValid === false;
+  const scoreCategory = tampered ? 'tampered' : getScoreCategory(score);
+  const scoreLabel = tampered ? 'Record has been altered'
+    : score >= 70 ? 'Trusted Seller'
     : score >= 40 ? 'Building Reputation' : 'New Seller';
 
   return (
@@ -123,14 +126,14 @@ export default function TrustScorePage() {
 
         {/* Score card */}
         <div className="card trust-score-card">
-          <div className={`trust-score-value ${scoreCategory}`}>{score}</div>
-          <p className="trust-score-out-of">out of 100</p>
+          <div className={`trust-score-value ${scoreCategory}`}>{tampered ? '⚠' : score}</div>
+          <p className="trust-score-out-of">{tampered ? 'score not reliable' : 'out of 100'}</p>
           <p className={`trust-score-label ${scoreCategory}`}>{scoreLabel}</p>
 
           <div className="trust-progress-bar">
             <div
               className={`trust-progress-fill ${scoreCategory}`}
-              style={{ width: `${score}%` }}
+              style={{ width: `${tampered ? 100 : score}%` }}
             />
           </div>
 
@@ -156,6 +159,17 @@ export default function TrustScorePage() {
             )}
           </div>
         </div>
+
+        {/* Tamper warning */}
+        {tampered && (
+          <div className="card trust-tamper-card" role="alert">
+            <p className="trust-tamper-title">⚠️ This seller's trust record failed verification</p>
+            <p className="trust-tamper-text">
+              One or more recorded events no longer match their hashes, so the history has been
+              changed since it was written. Do not rely on this score.
+            </p>
+          </div>
+        )}
 
         {/* How to build score (only when empty and viewing own profile) */}
         {blocks.length === 0 && isSelf && (
