@@ -1,5 +1,4 @@
-// Run with: npm test (from backend/)
-const { test } = require('node:test');
+// Run with: npm test (from backend/) — Jest
 const assert = require('node:assert/strict');
 const { createBlock, verifyChain, calculateScore, sha256 } = require('../utils/blockchain');
 

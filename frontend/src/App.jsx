@@ -5,6 +5,9 @@ import { Toaster } from 'react-hot-toast';
 import store from './store';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { initSocket, disconnectSocket } from './utils/socket';
+import toast from 'react-hot-toast';
+import api from './utils/api';
+import { syncDrafts } from './utils/offlineDrafts';
 
 // Pages
 import RegisterPage      from './pages/RegisterPage';
@@ -30,9 +33,33 @@ function SocketInit() {
   return null;
 }
 
+// Post listings saved offline as soon as there is a connection
+function DraftSync() {
+  const { isAuthenticated, user } = useSelector((s) => s.auth);
+  const canSell = isAuthenticated && ['seller', 'admin'].includes(user?.role);
+  useEffect(() => {
+    if (!canSell) return;
+    const sync = async () => {
+      if (!navigator.onLine) return;
+      const { posted, failed } = await syncDrafts((fd) => api.post('/listings', fd, { timeout: 90000 }));
+      if (posted) toast.success(`${posted} listing${posted > 1 ? 's' : ''} saved offline ${posted > 1 ? 'have' : 'has'} been posted`);
+      if (failed) toast.error(`${failed} offline listing${failed > 1 ? 's' : ''} could not be posted. See My Listings.`);
+    };
+    sync();
+    window.addEventListener('online', sync);
+    window.addEventListener('zammarket:flush-queue', sync); // service worker background sync
+    return () => {
+      window.removeEventListener('online', sync);
+      window.removeEventListener('zammarket:flush-queue', sync);
+    };
+  }, [canSell]);
+  return null;
+}
+
 function AppRoutes() {
   return (
     <>
+      <DraftSync />
       <SocketInit />
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
       <Routes>

@@ -1,9 +1,68 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
+import api from '../utils/api';
+import { getDrafts, deleteDraft, syncDrafts, DRAFTS_CHANGED } from '../utils/offlineDrafts';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchMyListings, updateListingStatus, deleteListing } from '../store/slices/listingSlice';
 import ListingCard from '../components/listings/ListingCard';
 import './MyListingsPage.css';
+
+/* ── Listings saved offline, waiting to be posted ─────── */
+function PendingDrafts({ onPosted }) {
+  const [drafts, setDrafts] = useState([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const load = () => getDrafts().then(setDrafts);
+    load();
+    window.addEventListener(DRAFTS_CHANGED, load);
+    return () => window.removeEventListener(DRAFTS_CHANGED, load);
+  }, []);
+
+  const postNow = useCallback(async () => {
+    if (!navigator.onLine) {
+      toast.error('Still offline. They will be posted when you reconnect.');
+      return;
+    }
+    setBusy(true);
+    const { posted, failed } = await syncDrafts((fd) => api.post('/listings', fd, { timeout: 90000 }));
+    setBusy(false);
+    if (posted) { toast.success(`${posted} posted`); onPosted(); }
+    if (!posted && !failed) toast.error('Could not reach the server. Try again shortly.');
+  }, [onPosted]);
+
+  if (drafts.length === 0) return null;
+  return (
+    <div className="pending-drafts">
+      <div className="pending-drafts__header">
+        <p className="pending-drafts__title">📵 Waiting to post ({drafts.length})</p>
+        <button className="pending-drafts__post" onClick={postNow} disabled={busy}>
+          {busy ? 'Posting…' : 'Post now'}
+        </button>
+      </div>
+      {drafts.map((d) => (
+        <div key={d.id} className="pending-drafts__item">
+          <div>
+            <p className="pending-drafts__name">{d.fields.title}</p>
+            <p className="pending-drafts__meta">
+              K{d.fields.pricePerBag} per {d.fields.unit} · {d.fields.quantityAvailable} available
+              {d.image ? ' · photo' : ''} · saved {new Date(d.savedAt).toLocaleTimeString()}
+            </p>
+            {d.error && <p className="pending-drafts__error">⚠ {d.error}</p>}
+          </div>
+          <button
+            className="pending-drafts__delete"
+            aria-label={`Delete draft ${d.fields.title}`}
+            onClick={() => { if (window.confirm('Delete this unsent listing?')) deleteDraft(d.id); }}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function MyListingsPage() {
   const dispatch = useDispatch();
@@ -51,6 +110,7 @@ export default function MyListingsPage() {
       </nav>
 
       <div className="my-listings-content">
+        <PendingDrafts onPosted={() => dispatch(fetchMyListings())} />
         {/* Summary stats */}
         <div className="stats-grid">
           {[

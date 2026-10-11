@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { logout, upgradeToSeller } from '../store/slices/authSlice';
+import { logout, upgradeToSeller, fetchMe } from '../store/slices/authSlice';
 import { isPWA } from '../utils/pwa';
 import './DashboardPage.css';
 
@@ -27,7 +27,7 @@ function OfflineBanner() {
       <div>
         <p className="offline-banner__title">You are offline</p>
         <p className="offline-banner__subtitle">
-          Messages will queue and send when reconnected.
+          Messages and new listings are saved and sent when you reconnect.
         </p>
       </div>
     </div>
@@ -70,8 +70,11 @@ function PWAInstallBanner() {
 /* ── Dashboard Page ──────────────────────────────── */
 export default function DashboardPage() {
   const dispatch = useDispatch();
+
+  // Refresh the profile so the trust score is current, not the one saved at login
+  useEffect(() => { dispatch(fetchMe()); }, [dispatch]);
   const navigate = useNavigate();
-  const { user, loading } = useSelector((s) => s.auth);
+  const { user } = useSelector((s) => s.auth);
   const { conversations } = useSelector((s) => s.chat);
 
   const userId = getUserId(user);

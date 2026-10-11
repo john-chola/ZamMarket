@@ -1,6 +1,5 @@
 // Controller and middleware tests. Mongoose model methods are replaced
 // with stubs, so these run without a database.
-const { test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const jwt = require('jsonwebtoken');
 

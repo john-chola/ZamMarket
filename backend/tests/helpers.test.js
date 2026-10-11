@@ -1,4 +1,3 @@
-const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { getAllowedOrigins } = require('../utils/corsOrigins');
 const { escapeRegex } = require('../utils/escapeRegex');

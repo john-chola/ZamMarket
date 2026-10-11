@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createListing, clearError, clearCreateSuccess } from '../../store/slices/listingSlice';
 import { NEIGHBOURHOODS } from '../../utils/validation';
 import { compressImage } from '../../utils/compressImage';
+import { saveDraft } from '../../utils/offlineDrafts';
+import toast from 'react-hot-toast';
 import './CreateListingForm.css';
 
 const UNITS = ['bag', 'tin', 'kg'];
@@ -57,8 +59,18 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
     setImagePreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e) => {
+  const saveOffline = async () => {
+    await saveDraft({ title, pricePerBag, unit, quantityAvailable, neighbourhood, description }, imageFile);
+    toast.success('Saved offline. It will be posted automatically when you are back online.', { duration: 5000 });
+    onSuccess?.();
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!navigator.onLine) {
+      await saveOffline();
+      return;
+    }
     const formData = new FormData();
     formData.append('title',             title);
     formData.append('pricePerBag',       pricePerBag);
@@ -67,7 +79,12 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
     formData.append('neighbourhood',     neighbourhood);
     formData.append('description',       description);
     if (imageFile) formData.append('image', imageFile);
-    dispatch(createListing(formData));
+    const result = await dispatch(createListing(formData));
+    // Server unreachable mid-post: keep the listing as an offline draft
+    if (result.meta.requestStatus === 'rejected' && String(result.payload).startsWith('Cannot reach the server')) {
+      dispatch(clearError());
+      await saveOffline();
+    }
   };
 
   return (
