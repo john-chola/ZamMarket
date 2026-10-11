@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createListing, clearError, clearCreateSuccess } from '../../store/slices/listingSlice';
 import { NEIGHBOURHOODS } from '../../utils/validation';
+import { compressImage } from '../../utils/compressImage';
 import './CreateListingForm.css';
 
 const UNITS = ['bag', 'tin', 'kg'];
@@ -39,9 +40,19 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
     return () => dispatch(clearError());
   }, [createSuccess, dispatch, onSuccess]);
 
-  const handleImage = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const [imageError, setImageError] = useState('');
+
+  const handleImage = async (e) => {
+    const original = e.target.files[0];
+    if (!original) return;
+    setImageError('');
+    const file = await compressImage(original);
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('This photo is too large (over 5 MB). Please choose another one.');
+      setImageFile(null);
+      setImagePreview(null);
+      return;
+    }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -62,6 +73,7 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
   return (
     <form onSubmit={handleSubmit}>
       {error && <div className="error-msg">{error}</div>}
+      {imageError && <div className="error-msg">{imageError}</div>}
 
       {/* Image upload */}
       <div className="form-group">

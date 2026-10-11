@@ -20,3 +20,16 @@ test('escapeRegex makes user input literal', () => {
   assert.ok(!re.test('K95 hardwood'));
   assert.equal(escapeRegex('(a+)+$'), '\\(a\\+\\)\\+\\$');
 });
+
+test('upload errors become clear 400 messages', () => {
+  const { errorHandler } = require('../middleware/errorHandler');
+  const res = { status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
+  const tooBig = Object.assign(new Error('File too large'), { name: 'MulterError', code: 'LIMIT_FILE_SIZE' });
+  const quiet = console.error; console.error = () => {};
+  errorHandler(tooBig, {}, res, () => {});
+  assert.equal(res.code, 400);
+  assert.match(res.body.message, /larger than 5 MB/);
+  errorHandler(new Error('Only JPG, PNG, and WebP images are allowed'), {}, res, () => {});
+  console.error = quiet;
+  assert.equal(res.code, 400);
+});
