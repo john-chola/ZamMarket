@@ -47,4 +47,4 @@ const deleteImage = async (publicId) => {
   }
 };
 
-module.exports = { uploadImage, deleteImage };
+module.exports = { uploadImage, deleteImage, isConfigured };

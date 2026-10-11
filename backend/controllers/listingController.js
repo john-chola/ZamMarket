@@ -23,8 +23,16 @@ exports.createListing = async (req, res, next) => {
     };
 
     if (req.file) {
-      const result = await uploadImage(req.file.buffer);
-      listingData.image = { url: result.url, publicId: result.publicId };
+      try {
+        const result = await uploadImage(req.file.buffer);
+        listingData.image = { url: result.url, publicId: result.publicId };
+      } catch (uploadErr) {
+        console.error('Cloudinary upload failed:', uploadErr.message);
+        return res.status(502).json({
+          status: 'error',
+          message: 'The photo could not be uploaded. Try again, or post without a photo.',
+        });
+      }
     }
 
     const listing = await Listing.create(listingData);

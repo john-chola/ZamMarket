@@ -36,8 +36,17 @@ app.use('/api/chat',     chatRoutes);
 app.use('/api/trust',    trustRoutes);
 app.use('/api/admin',    adminRoutes);
 
+// Health check, also showing which services are configured (no secrets)
+const { isConfigured: cloudinaryConfigured } = require('./utils/cloudinary');
 app.get('/api/health', (_, res) =>
-  res.json({ status: 'ok', message: 'ZamMarket API — All Sprints', timestamp: new Date() })
+  res.json({
+    status: 'ok',
+    message: 'ZamMarket API',
+    timestamp: new Date(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'not connected',
+    cloudinary: cloudinaryConfigured() ? 'configured' : 'NOT configured (photos are skipped)',
+    allowedOrigins: getAllowedOrigins(),
+  })
 );
 app.use(errorHandler);
 

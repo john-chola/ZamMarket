@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../utils/api';
+import api, { describeError } from '../../utils/api';
 
 // ── Async thunks ───────────────────────────────────────────
 
@@ -48,10 +48,11 @@ export const createListing = createAsyncThunk(
     try {
       const { data } = await api.post('/listings', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 90000, // waking the server + photo upload can be slow
       });
       return data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Failed to create listing');
+      return rejectWithValue(describeError(err, 'Failed to create listing'));
     }
   }
 );
