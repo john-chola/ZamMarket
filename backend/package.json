@@ -9,7 +9,8 @@
     "test:coverage": "jest --coverage",
     "create-admin": "node scripts/createAdmin.js",
     "test": "jest",
-    "seed-demo": "node scripts/seedDemo.js"
+    "seed-demo": "node scripts/seedDemo.js",
+    "check-cloudinary": "node scripts/checkCloudinary.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
