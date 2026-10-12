@@ -16,6 +16,19 @@ const NEIGHBOURHOODS = [
   { value: 'Kabwata',      aliases: ['kabwata'] },
   { value: 'Libala',       aliases: ['libala'] },
   { value: 'Lusaka_CBD',   aliases: ['lusaka cbd', 'cbd', 'city centre', 'city center', 'town centre', 'town center', 'in town', 'cairo road'] },
+  { value: 'Munali',       aliases: ['munali']},
+  { value: 'Roma',         aliases: ['roma']},
+  { value: 'Lima',         aliases: ['lima']},
+  { value: 'Mandevu',      aliases: ['mandevu']},
+  { value: 'Makeni',       aliases: ['makeni'] },
+  { value: 'Chawama',      aliases: ['chawama', 'cawama'] },
+  { value: 'Feira',       aliases: ['feira', 'fera', 'fira'] },
+  { value: 'Kafue West',  aliases: ['kafue west'] },
+  { value: 'Kafue East',       aliases: ['kafue east', 'kafue ist', 'kafu east', 'kafe ist', 'kafue est'] },
+  { value: 'Chongwe East',       aliases: ['chonwe east'] },
+  { value: 'Chongwe West',       aliases: ['Chongwe west'] },
+  { value: 'Chilanga South',       aliases: ['chilanga south', 'cilanga south'] },
+  { value: 'Chilanga North',       aliases: ['chilanga north', 'cilanga noth', 'chilanga noth', 'cilanga north'] },
 ];
 
 const CHARCOAL_TYPES = [

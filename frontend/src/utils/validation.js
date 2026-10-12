@@ -15,5 +15,8 @@ export const isValidZambianPhone = (phone) =>
   export const NEIGHBOURHOODS = [
     'Kalingalinga', 'Kanyama', 'Mtendere', 'Chilenje',
     'Matero', 'Bauleni', 'Chelstone', 'Woodlands',
-    'Kabwata', 'Libala', 'Lusaka_CBD', 'Other',
+    'Kabwata', 'Libala', 'Lusaka_CBD', 'Munali', 'Roma', 
+    'Lima', 'Mandevu', 'Makeni', 'Chawama', 'Feira',
+     'Kafue West', 'Kafue South', 'Chongwe East', 'Chongwe West', 'Chilanga South',
+      'Chilanga North', 'Other',
   ];
