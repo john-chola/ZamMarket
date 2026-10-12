@@ -2,6 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseListing, wordsToDigits, parseBestAlternative, NEIGHBOURHOOD_VALUES } from './parseListing.js';
+import { readFileSync } from 'node:fs';
+import { NEIGHBOURHOODS } from '../../utils/validation.js';
 
 const expectFields = (said, expected) => {
   const got = parseListing(said);
@@ -66,8 +68,21 @@ test('neighbourhoods map to backend enum values', () => {
   expectFields('charcoal Chelstone', { neighbourhood: 'Chelstone' });
   expectFields('charcoal Kalingalinga', { neighbourhood: 'Kalingalinga' });
   expectFields('charcoal somewhere else', { neighbourhood: null });
-  assert.deepEqual(NEIGHBOURHOOD_VALUES, ['Kalingalinga', 'Kanyama', 'Mtendere', 'Chilenje', 'Matero',
-    'Bauleni', 'Chelstone', 'Woodlands', 'Kabwata', 'Libala', 'Lusaka_CBD']);
+  expectFields('charcoal Kafue South K100', { neighbourhood: 'Kafue South' });
+  expectFields('ten bags chonwe east', { neighbourhood: 'Chongwe East' });
+  expectFields('charcoal in Chongwe West', { neighbourhood: 'Chongwe West' });
+});
+
+test('voice, form and backend use the same neighbourhood list', () => {
+  const backend = (file) => {
+    const src = readFileSync(new URL(`../../../../backend/models/${file}`, import.meta.url), 'utf8');
+    const block = src.slice(src.indexOf('neighbourhood:'));
+    return block.slice(block.indexOf('['), block.indexOf(']')).match(/'([^']+)'/g).map((s) => s.slice(1, -1));
+  };
+  const withoutOther = (list) => list.filter((n) => n !== 'Other');
+  assert.deepEqual(withoutOther(NEIGHBOURHOODS), NEIGHBOURHOOD_VALUES);
+  assert.deepEqual(backend('Listing.js'), NEIGHBOURHOODS);
+  assert.deepEqual(backend('User.js'), NEIGHBOURHOODS);
 });
 
 test('title is a clean phrase, not leftover words', () => {

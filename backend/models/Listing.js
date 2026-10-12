@@ -44,7 +44,10 @@ const listingSchema = new mongoose.Schema(
       enum: [
         'Kalingalinga', 'Kanyama', 'Mtendere', 'Chilenje',
         'Matero', 'Bauleni', 'Chelstone', 'Woodlands',
-        'Kabwata', 'Libala', 'Lusaka Central', 'Munali', 'Roma', 'Lima', 'Mandevu', 'Makeni', 'Chawama', 'Feira', 'Kafue West', 'Kafue South', 'Chongwe East', 'Chongwe West', 'Chilanga South', 'Chilanga North', 'Other',
+        'Kabwata', 'Libala', 'Lusaka_CBD', 'Munali', 'Roma',
+        'Lima', 'Mandevu', 'Makeni', 'Chawama', 'Feira',
+        'Kafue West', 'Kafue South', 'Chongwe East', 'Chongwe West',
+        'Chilanga South', 'Chilanga North', 'Other',
       ],
       required: [true, 'Neighbourhood is required'],
     },
