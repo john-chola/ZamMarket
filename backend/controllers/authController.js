@@ -2,22 +2,30 @@ const User = require('../models/User');
 const { sendOTP, verifyOTP } = require('../utils/otp');
 const { createAuthResponse } = require('../utils/jwt');
 
+// Same rule as the User model
+const PHONE_RE = /^(\+260|0)(9[5-7]|7[6-9])\d{7}$/;
+
 // ── POST /api/auth/request-otp ─────────────────────────────
 // Step 1 of registration: send OTP to phone number
 exports.requestOTP = async (req, res, next) => {
   try {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ status: 'error', message: 'Phone number is required' });
+    if (!PHONE_RE.test(String(phone))) {
+      return res.status(400).json({ status: 'error', message: 'Enter a valid Zambian phone number' });
+    }
+    // Don't spend an SMS on a number that already has an account
+    if (await User.exists({ phone })) {
+      return res.status(409).json({ status: 'error', message: 'This number is already registered. Log in instead.' });
+    }
 
     const result = await sendOTP(phone);
     res.json({
       status: 'success',
       message: 'OTP sent to your phone number',
       expiresAt: result.expiresAt,
-      // In development, remind the developer to check the server console
-      ...(process.env.NODE_ENV === 'development' && {
-        devNote: 'Check server console for the OTP code',
-      }),
+      // With SMS_PROVIDER=console the code is only in the server log
+      ...(result.simulated && { devNote: 'Check server console for the OTP code' }),
     });
   } catch (err) {
     next(err);

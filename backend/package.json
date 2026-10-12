@@ -10,7 +10,8 @@
     "create-admin": "node scripts/createAdmin.js",
     "test": "jest",
     "seed-demo": "node scripts/seedDemo.js",
-    "check-cloudinary": "node scripts/checkCloudinary.js"
+    "check-cloudinary": "node scripts/checkCloudinary.js",
+    "test-sms": "node scripts/testSms.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
