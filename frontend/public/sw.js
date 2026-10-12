@@ -2,8 +2,8 @@
 // Offline-first PWA: cache listings, enable offline create + message queue
 
 // Bump the version whenever caching rules change: old caches are deleted on activate
-const CACHE_NAME    = 'zammarket-v2';
-const API_CACHE     = 'zammarket-api-v2';
+const CACHE_NAME    = 'zammarket-v3';
+const API_CACHE     = 'zammarket-api-v3';
 
 // App shell cached on install. Vite's hashed JS/CSS files are cached
 // the first time they load (see cacheFirstStatic).
@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/favicon.svg',
+  '/icon-192.png',
 ];
 
 // Never cached: auth responses and admin data

@@ -20,6 +20,7 @@ const Listing = require('../models/Listing');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const TrustChain = require('../models/TrustChain');
+const { phoneVariants } = require('../utils/phone');
 const { addTrustEvent } = require('../controllers/trustController');
 
 const PASSWORD = 'demo1234';
@@ -78,7 +79,7 @@ const check = () => {
 };
 
 const removeDemoData = async () => {
-  const existing = await User.find({ phone: { $in: Object.values(USERS).map((u) => u.phone) } }).select('_id');
+  const existing = await User.find({ phone: { $in: Object.values(USERS).flatMap((u) => phoneVariants(u.phone)) } }).select('_id');
   const ids = existing.map((u) => u._id);
   if (ids.length === 0) return 0;
   const convs = await Conversation.find({ $or: [{ buyer: { $in: ids } }, { seller: { $in: ids } }] }).select('_id');

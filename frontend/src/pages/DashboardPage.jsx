@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { logout, upgradeToSeller, fetchMe } from '../store/slices/authSlice';
-import { isPWA } from '../utils/pwa';
+import { isPWA, getInstallPrompt, onInstallPrompt } from '../utils/pwa';
 import './DashboardPage.css';
 
 const getUserId = (user) => user?._id || user?.id || null;
@@ -36,15 +36,11 @@ function OfflineBanner() {
 
 /* ── PWA Install Banner ─────────────────────────── */
 function PWAInstallBanner() {
-  const [prompt, setPrompt] = useState(null);
+  const [prompt, setPrompt] = useState(getInstallPrompt);
   const [dismissed, setDismissed] = useState(
     () => localStorage.getItem('pwa_dismissed') === '1'
   );
-  useEffect(() => {
-    const handler = (e) => { e.preventDefault(); setPrompt(e); };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  useEffect(() => onInstallPrompt(setPrompt), []);
   if (!prompt || dismissed || isPWA()) return null;
   const install = async () => {
     prompt.prompt();
