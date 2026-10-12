@@ -12,11 +12,11 @@ export const isValidZambianPhone = (phone) =>
     return `+260${digits}`;
   };
   
-  export const NEIGHBOURHOODS = [
-    'Kalingalinga', 'Kanyama', 'Mtendere', 'Chilenje',
-    'Matero', 'Bauleni', 'Chelstone', 'Woodlands',
-    'Kabwata', 'Libala', 'Lusaka_CBD', 'Munali', 'Roma', 
-    'Lima', 'Mandevu', 'Makeni', 'Chawama', 'Feira',
-     'Kafue West', 'Kafue South', 'Chongwe East', 'Chongwe West', 'Chilanga South',
-      'Chilanga North', 'Other',
-  ];
+export const NEIGHBOURHOODS = [
+  'Kalingalinga', 'Kanyama', 'Mtendere', 'Chilenje',
+  'Matero', 'Bauleni', 'Chelstone', 'Woodlands',
+  'Kabwata', 'Libala', 'Lusaka_CBD', 'Munali', 'Roma',
+  'Lima', 'Mandevu', 'Makeni', 'Chawama', 'Feira',
+  'Kafue West', 'Kafue South', 'Chongwe East', 'Chongwe West',
+  'Chilanga South', 'Chilanga North', 'Other',
+];
