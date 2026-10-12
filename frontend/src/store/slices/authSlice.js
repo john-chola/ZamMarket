@@ -102,6 +102,8 @@ const authSlice = createSlice({
     error:           null,
     otpSent:         false,
     otpPhone:        null,
+    otpSentAt:       null,
+    otpSimulated:    false,
   },
   reducers: {
     logout(state) {
@@ -114,7 +116,7 @@ const authSlice = createSlice({
       localStorage.removeItem('zammarket_user');
     },
     clearError(state) { state.error = null; },
-    resetOtp(state)   { state.otpSent = false; state.otpPhone = null; },
+    resetOtp(state)   { state.otpSent = false; state.otpPhone = null; state.otpSentAt = null; state.otpSimulated = false; },
   },
   extraReducers: (builder) => {
     builder
@@ -123,6 +125,9 @@ const authSlice = createSlice({
         state.loading  = false;
         state.otpSent  = true;
         state.otpPhone = action.meta.arg;
+        state.otpSentAt = Date.now();
+        // Only true when the server prints codes in its log instead of sending an SMS
+        state.otpSimulated = Boolean(action.payload?.devNote);
       })
       .addCase(requestOTP.rejected,  (state, action) => { state.loading = false; state.error = action.payload; });
 

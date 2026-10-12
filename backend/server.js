@@ -38,6 +38,7 @@ app.use('/api/admin',    adminRoutes);
 
 // Health check, also showing which services are configured (no secrets)
 const { isConfigured: cloudinaryConfigured } = require('./utils/cloudinary');
+const { smsStatus } = require('./utils/sms');
 app.get('/api/health', (_, res) =>
   res.json({
     status: 'ok',
@@ -45,6 +46,7 @@ app.get('/api/health', (_, res) =>
     timestamp: new Date(),
     database: mongoose.connection.readyState === 1 ? 'connected' : 'not connected',
     cloudinary: cloudinaryConfigured() ? 'configured' : 'NOT configured (photos are skipped)',
+    sms: smsStatus(),
     allowedOrigins: getAllowedOrigins(),
   })
 );
@@ -53,6 +55,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGODB_URI).then(() => {
   console.log('✅ MongoDB connected');
+  console.log(`📱 SMS: ${smsStatus()}`);
   initSocket(httpServer);
   console.log('✅ Socket.io initialized');
   httpServer.listen(PORT, '0.0.0.0', () =>

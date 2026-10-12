@@ -1,32 +1,42 @@
+const crypto = require('crypto');
 const OTP = require('../models/OTP');
+const { sendSms, isConsole } = require('./sms');
 
-// Generate a 6-digit OTP code
-const generateCode = () =>
-  Math.floor(100000 + Math.random() * 900000).toString();
+const TTL_MS = 10 * 60 * 1000;   // a code lasts 10 minutes
+const RESEND_MS = 60 * 1000;     // one SMS per phone per minute
 
-// "Send" OTP — in dev mode logs to console; swap this for real SMS later
+// Generate a 6-digit OTP code (cryptographically random)
+const generateCode = () => crypto.randomInt(100000, 1000000).toString();
+
+// Create a code and send it by SMS (or to the server log when SMS_PROVIDER=console)
 const sendOTP = async (phone) => {
+  // Stop repeated taps from sending (and paying for) several messages
+  const previous = await OTP.findOne({ phone, verified: false });
+  if (previous) {
+    const sentAt = previous.expiresAt.getTime() - TTL_MS;
+    const wait = Math.ceil((sentAt + RESEND_MS - Date.now()) / 1000);
+    if (wait > 0) {
+      const err = new Error(`A code was just sent. Wait ${wait} seconds before asking for another.`);
+      err.statusCode = 429;
+      throw err;
+    }
+  }
+
   // Delete any existing OTP for this phone
   await OTP.deleteMany({ phone });
 
   const code = generateCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  const expiresAt = new Date(Date.now() + TTL_MS);
+  const otp = await OTP.create({ phone, code, expiresAt });
 
-  await OTP.create({ phone, code, expiresAt });
-
-  if (process.env.NODE_ENV === 'development') {
-    // ─────────────────────────────────────────────────────────
-    // SIMULATED OTP — printed to server console
-    // In production: replace this block with Africa's Talking
-    // or Twilio SMS API call.
-    // ─────────────────────────────────────────────────────────
-    console.log('\n──────────────────────────────────────');
-    console.log(`SIMULATED OTP for ${phone}: ${code}`);
-    console.log('──────────────────────────────────────\n');
+  try {
+    const sent = await sendSms(phone, `Your ZamMarket code is ${code}. It expires in 10 minutes. Do not share it.`);
+    return { success: true, expiresAt, messageId: sent.messageId, simulated: isConsole() };
+  } catch (err) {
+    // The user never received this code, so it must not stay valid
+    await OTP.deleteOne({ _id: otp._id });
+    throw err;
   }
-
-  return { success: true, expiresAt };
-  // TODO (Sprint 4): return { success: true, messageId } from real SMS
 };
 
 // Verify an OTP code

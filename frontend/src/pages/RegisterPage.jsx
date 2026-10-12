@@ -32,7 +32,7 @@ function StepBar({ current }) {
 export default function RegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, otpSent, isAuthenticated } = useSelector((s) => s.auth);
+  const { loading, error, otpSent, otpSentAt, otpSimulated, isAuthenticated } = useSelector((s) => s.auth);
 
   const [step, setStep] = useState(0);
   const [phone, setPhone] = useState('');
@@ -51,6 +51,20 @@ export default function RegisterPage() {
 
   // Move to the code step as soon as the OTP has been sent
   if (otpSent && step === 0) setStep(1);
+
+  // Seconds until another code may be requested (the server allows one per minute)
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (step !== 1) return undefined;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [step]);
+  const resendIn = otpSentAt ? Math.min(60, Math.max(0, Math.ceil((otpSentAt + 60000 - now) / 1000))) : 0;
+
+  const handleResend = () => {
+    if (resendIn > 0 || loading) return;
+    dispatch(requestOTP(normalizePhone(phone)));
+  };
 
   const handleRequestOTP = (e) => {
     e.preventDefault();
@@ -132,12 +146,25 @@ export default function RegisterPage() {
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   required
                 />
-                <p className="dev-hint">
-                   Dev mode: Check your backend terminal (Git Bash window running the server) for the code.
+                <p className="helper-text">
+                  We sent a 6-digit code by SMS to {normalizePhone(phone)}. It expires in 10 minutes.
                 </p>
+                {otpSimulated && (
+                  <p className="dev-hint">
+                    Dev mode: SMS is off (SMS_PROVIDER=console). The code is in the backend terminal.
+                  </p>
+                )}
               </div>
               <button className="btn btn-ember" type="submit" disabled={otp.length !== 6}>
                 Verify Code
+              </button>
+              <button
+                className="btn btn-outline"
+                type="button"
+                onClick={handleResend}
+                disabled={resendIn > 0 || loading}
+              >
+                {loading ? <span className="spinner" /> : resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
               </button>
               <button
                 className="btn btn-outline"
