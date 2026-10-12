@@ -11,6 +11,7 @@
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const { phoneVariants } = require('../utils/phone');
 const User = require('../models/User');
 
 const readArg = (name) => {
@@ -35,7 +36,7 @@ const fail = (msg) => {
   console.log(`Connected to database "${mongoose.connection.name}"`);
 
   try {
-    let user = await User.findOne({ phone }).select('+password');
+    let user = await User.findOne({ phone: { $in: phoneVariants(phone) } }).select('+password');
 
     if (user) {
       user.role = 'admin';

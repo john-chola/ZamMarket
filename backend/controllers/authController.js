@@ -1,21 +1,19 @@
 const User = require('../models/User');
 const { sendOTP, verifyOTP } = require('../utils/otp');
 const { createAuthResponse } = require('../utils/jwt');
-
-// Same rule as the User model
-const PHONE_RE = /^(\+260|0)(9[5-7]|7[6-9])\d{7}$/;
+const { normalizePhone, isValidPhone, phoneVariants } = require('../utils/phone');
 
 // ── POST /api/auth/request-otp ─────────────────────────────
 // Step 1 of registration: send OTP to phone number
 exports.requestOTP = async (req, res, next) => {
   try {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ status: 'error', message: 'Phone number is required' });
-    if (!PHONE_RE.test(String(phone))) {
+    if (!req.body.phone) return res.status(400).json({ status: 'error', message: 'Phone number is required' });
+    const phone = normalizePhone(req.body.phone);
+    if (!isValidPhone(phone)) {
       return res.status(400).json({ status: 'error', message: 'Enter a valid Zambian phone number' });
     }
     // Don't spend an SMS on a number that already has an account
-    if (await User.exists({ phone })) {
+    if (await User.exists({ phone: { $in: phoneVariants(phone) } })) {
       return res.status(409).json({ status: 'error', message: 'This number is already registered. Log in instead.' });
     }
 
@@ -36,7 +34,8 @@ exports.requestOTP = async (req, res, next) => {
 // Step 2: verify OTP + create account
 exports.register = async (req, res, next) => {
   try {
-    const { phone, otp, name, password, role, neighbourhood } = req.body;
+    const { otp, name, password, role, neighbourhood } = req.body;
+    const phone = req.body.phone ? normalizePhone(req.body.phone) : '';
 
     // Validate required fields
     if (!phone || !otp || !name || !password) {
@@ -53,7 +52,7 @@ exports.register = async (req, res, next) => {
     }
 
     // Check phone not already registered
-    const existing = await User.findOne({ phone });
+    const existing = await User.findOne({ phone: { $in: phoneVariants(phone) } });
     if (existing) {
       return res.status(409).json({
         status: 'error',
@@ -90,12 +89,14 @@ exports.register = async (req, res, next) => {
 // ── POST /api/auth/login ───────────────────────────────────
 exports.login = async (req, res, next) => {
   try {
-    const { phone, password } = req.body;
+    const { password } = req.body;
+    const phone = req.body.phone ? normalizePhone(req.body.phone) : '';
     if (!phone || !password) {
       return res.status(400).json({ status: 'error', message: 'Phone and password are required' });
     }
 
-    const user = await User.findOne({ phone }).select('+password');
+    // Matches "0977…" and "+260977…", however the account was stored
+    const user = await User.findOne({ phone: { $in: phoneVariants(phone) } }).select('+password');
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ status: 'error', message: 'Invalid phone number or password' });
     }

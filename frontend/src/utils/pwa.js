@@ -35,6 +35,27 @@ export const registerSW = async () => {
     }
   };
   
+  // Chrome fires "beforeinstallprompt" once, soon after the page loads,
+  // usually before the user reaches the dashboard. Keep it for later.
+  let installPrompt = null;
+  const installListeners = new Set();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      installPrompt = e;
+      installListeners.forEach((fn) => fn(e));
+    });
+    window.addEventListener('appinstalled', () => {
+      installPrompt = null;
+      installListeners.forEach((fn) => fn(null));
+    });
+  }
+  export const getInstallPrompt = () => installPrompt;
+  export const onInstallPrompt = (fn) => {
+    installListeners.add(fn);
+    return () => installListeners.delete(fn);
+  };
+
   // Check if app is installed as PWA
   export const isPWA = () =>
     window.matchMedia('(display-mode: standalone)').matches ||
