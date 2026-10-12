@@ -27,10 +27,14 @@ exports.createListing = async (req, res, next) => {
         const result = await uploadImage(req.file.buffer);
         listingData.image = { url: result.url, publicId: result.publicId };
       } catch (uploadErr) {
-        console.error('Cloudinary upload failed:', uploadErr.message);
+        const reason = uploadErr?.message || String(uploadErr);
+        console.error('Cloudinary upload failed:', reason, uploadErr?.http_code ? `(HTTP ${uploadErr.http_code})` : '');
         return res.status(502).json({
           status: 'error',
-          message: 'The photo could not be uploaded. Try again, or post without a photo.',
+          // The technical reason is shown only during development
+          message: process.env.NODE_ENV === 'production'
+            ? 'The photo could not be uploaded. Try again, or post without a photo.'
+            : `The photo could not be uploaded: ${reason}. Run "npm run check-cloudinary" in backend/ for help.`,
         });
       }
     }

@@ -1,9 +1,14 @@
 const cloudinary = require('cloudinary').v2;
 
+// Values copied into .env often carry stray spaces or quotes,
+// which make Cloudinary reject every upload ("Invalid Signature")
+const clean = (v) => (v || '').trim().replace(/^['"]|['"]$/g, '');
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: clean(process.env.CLOUDINARY_CLOUD_NAME),
+  api_key: clean(process.env.CLOUDINARY_API_KEY),
+  api_secret: clean(process.env.CLOUDINARY_API_SECRET),
+  secure: true,
 });
 
 // Check if Cloudinary is configured
