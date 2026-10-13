@@ -47,7 +47,7 @@ export default function ListingDetailPage() {
   if (error || !listing)
     return (
       <div className="listing-detail-error">
-        <div className="error-icon">🪵</div>
+        <div className="error-icon"></div>
         <p>Listing not found.</p>
         <button className="btn btn-outline btn-browse" onClick={() => navigate('/browse')}>
           Browse listings
@@ -87,7 +87,7 @@ export default function ListingDetailPage() {
               }}
             />
           ) : (
-            <span className="listing-image-placeholder">🪵</span>
+            <span className="listing-image-placeholder"></span>
           )}
         </div>
 

@@ -211,7 +211,7 @@ export default function RegisterPage() {
                       className={`role-btn ${role === r ? 'active' : 'inactive'}`}
                       onClick={() => setRole(r)}
                     >
-                      {r === 'buyer' ? 'Buy' : '🪵 Sell'}
+                      {r === 'buyer' ? 'Buy' : 'Sell'}
                     </button>
                   ))}
                 </div>

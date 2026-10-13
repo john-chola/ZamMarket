@@ -267,7 +267,7 @@ export default function ChatPage() {
       {/* Listing context banner */}
       {currentConversation?.listing && (
         <div className="listing-banner">
-          <span className="listing-banner__icon">🪵</span>
+          <span className="listing-banner__icon"></span>
           <div className="listing-banner__info">
             <p className="listing-banner__title">
               {currentConversation.listing.title}

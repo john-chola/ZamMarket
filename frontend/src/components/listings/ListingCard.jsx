@@ -27,7 +27,7 @@ export default function ListingCard({ listing, showActions = false, onStatusChan
             className="listing-card__image-img"
           />
         ) : (
-          <span className="listing-card__placeholder">🪵</span>
+          <span className="listing-card__placeholder"></span>
         )}
         <span className={statusClass}>
           {STATUS_LABELS[listing.status] || STATUS_LABELS.active}

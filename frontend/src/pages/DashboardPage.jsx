@@ -50,7 +50,7 @@ function PWAInstallBanner() {
   const dismiss = () => { setDismissed(true); localStorage.setItem('pwa_dismissed', '1'); };
   return (
     <div className="pwa-banner">
-      <div className="pwa-banner__icon">🪵</div>
+      <div className="pwa-banner__icon"></div>
       <div className="pwa-banner__content">
         <p className="pwa-banner__title">Install ZamMarket</p>
         <p className="pwa-banner__subtitle">Add to home screen — works offline</p>
@@ -143,7 +143,7 @@ export default function DashboardPage() {
               <h2 className="profile-name">{user.name}</h2>
               <div className="profile-tags">
                 <span className={`profile-tag ${isAdmin ? 'profile-tag--admin' : isSeller ? 'profile-tag--seller' : 'profile-tag--buyer'}`}>
-                  {isAdmin ? '⚙️ Admin' : isSeller ? '🪵 Seller' : '🛒 Buyer'}
+                  {isAdmin ? '⚙️ Admin' : isSeller ? 'Seller' : '🛒 Buyer'}
                 </span>
                 {user.sellerProfile?.isVerified && (
                   <span className="profile-tag--verified">✓ Verified</span>

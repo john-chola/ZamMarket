@@ -195,7 +195,7 @@ export default function BrowsePage() {
         {/* Empty state */}
         {!loading && filtered.length === 0 && (
           <div className="empty-state">
-            <div className="empty-state__icon">🪵</div>
+            <div className="empty-state__icon"></div>
             <h3 className="empty-state__title">No listings found</h3>
             <p className="empty-state__message">
               {search

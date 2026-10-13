@@ -449,7 +449,7 @@ export default function AdminPage() {
             {!listings.loading && listings.data?.listings?.map((l) => (
               <div key={l._id} className="adm-row">
                 <div className="adm-thumb">
-                  {l.image?.url ? <img src={l.image.url} alt="" /> : <span aria-hidden="true">🪵</span>}
+                  {l.image?.url ? <img src={l.image.url} alt="" /> : <span aria-hidden="true"></span>}
                 </div>
                 <div className="adm-row__body">
                   <div className="adm-row__title">

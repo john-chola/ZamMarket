@@ -1,4 +1,4 @@
-# 🪵 ZamMarket
+# ZamMarket
 
 **A Progressive Web Application for Local Zambian Charcoal Commerce**
 

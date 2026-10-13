@@ -114,7 +114,7 @@ export default function InboxPage() {
                   </span>
                 </div>
                 <p className="conversation-listing">
-                  🪵 {conv.listing?.title || 'Listing'}
+                  {conv.listing?.title || 'Listing'}
                 </p>
                 <p
                   className={`conversation-preview ${
