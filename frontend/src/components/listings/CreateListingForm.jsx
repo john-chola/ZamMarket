@@ -212,7 +212,7 @@ export default function CreateListingForm({ onSuccess, voicePrefill }) {
 
       {/* Submit */}
       <button className="btn btn-ember submit-btn" type="submit" disabled={loading}>
-        {loading ? <span className="spinner" /> : '🪵 Post Listing'}
+        {loading ? <span className="spinner" /> : 'Post Listing'}
       </button>
     </form>
   );

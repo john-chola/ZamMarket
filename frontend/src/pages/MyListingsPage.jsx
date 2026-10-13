@@ -147,7 +147,7 @@ export default function MyListingsPage() {
 
         {!myLoading && myListings.length === 0 && (
           <div className="empty-state">
-            <div className="empty-state-icon">🪵</div>
+            <div className="empty-state-icon"></div>
             <h3 className="empty-state-title">No listings yet</h3>
             <p className="empty-state-description">
               Post your first charcoal listing and start getting buyers.
