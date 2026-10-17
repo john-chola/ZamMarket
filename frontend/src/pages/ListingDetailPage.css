@@ -340,12 +340,28 @@
 }
 
 .seller-trust {
-  text-align: center;
+  /* Looks and behaves like a button: it opens the seller's trust record */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   flex-shrink: 0;
-  text-decoration: none;
+  min-width: 84px;
+  padding: 8px 10px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--white);
   color: inherit;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
+.seller-trust--high { border-color: var(--green); background: var(--green-light); }
+.seller-trust--medium { border-color: var(--ember); background: var(--ember-light); }
+.seller-trust:hover { filter: brightness(0.97); }
+.seller-trust:active { transform: scale(0.97); }
+.seller-trust:focus-visible { outline: 2px solid var(--coal); outline-offset: 2px; }
 
 .seller-trust-score {
   font-family: 'Syne', sans-serif;
@@ -367,6 +383,18 @@
   color: var(--ash);
   text-transform: uppercase;
 }
+
+.seller-trust-cta {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.seller-trust--high .seller-trust-cta { color: var(--green); }
+.seller-trust--medium .seller-trust-cta { color: var(--ember-dark); }
 
 /* ── Error Message ───────────────────────────────── */
 .error-msg {

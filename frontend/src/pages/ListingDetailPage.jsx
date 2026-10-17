@@ -144,7 +144,7 @@ export default function ListingDetailPage() {
             </div>
             {/* Opens the seller's trust record, where the chain is re-verified */}
             <Link
-              className="seller-trust"
+              className={`seller-trust ${(seller?.trustScore?.score ?? 50) >= 70 ? 'seller-trust--high' : 'seller-trust--medium'}`}
               to={`/trust/${seller?._id}`}
               aria-label={`Trust score ${seller?.trustScore?.score ?? 50}: view ${seller?.name || 'seller'}'s trust record`}
             >
@@ -155,7 +155,8 @@ export default function ListingDetailPage() {
               >
                 {seller?.trustScore?.score ?? 50}
               </div>
-              <div className="seller-trust-label">Trust ›</div>
+              <div className="seller-trust-label">Trust score</div>
+              <div className="seller-trust-cta">View record ›</div>
             </Link>
           </div>
 
