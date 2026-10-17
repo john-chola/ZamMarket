@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { fetchListing, clearCurrent } from '../store/slices/listingSlice';
 import { startConversation, clearError } from '../store/slices/chatSlice';
 import './ListingDetailPage.css';
@@ -142,7 +142,12 @@ export default function ListingDetailPage() {
                 {seller?.sellerProfile?.isVerified ? ' · ✓ Verified' : ''}
               </p>
             </div>
-            <div className="seller-trust">
+            {/* Opens the seller's trust record, where the chain is re-verified */}
+            <Link
+              className="seller-trust"
+              to={`/trust/${seller?._id}`}
+              aria-label={`Trust score ${seller?.trustScore?.score ?? 50}: view ${seller?.name || 'seller'}'s trust record`}
+            >
               <div
                 className={`seller-trust-score ${
                   (seller?.trustScore?.score ?? 50) >= 70 ? 'trust-high' : 'trust-medium'
@@ -150,8 +155,8 @@ export default function ListingDetailPage() {
               >
                 {seller?.trustScore?.score ?? 50}
               </div>
-              <div className="seller-trust-label">Trust</div>
-            </div>
+              <div className="seller-trust-label">Trust ›</div>
+            </Link>
           </div>
 
           {/* Error display */}
