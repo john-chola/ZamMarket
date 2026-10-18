@@ -18,23 +18,24 @@ const openDB = () =>
     req.onerror = () => reject(req.error);
   });
 
-// Add a message to the offline queue
+// Add a message to the offline queue. Returns its queue id (or null if it failed),
+// which the chat page uses to remove the "queued" copy once the message is sent.
 export const queueMessage = async (conversationId, text) => {
   try {
     const db = await openDB();
     const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).add({
+    const req = tx.objectStore(STORE).add({
       conversationId,
       text,
       queuedAt: new Date().toISOString(),
     });
     return new Promise((res, rej) => {
-      tx.oncomplete = () => res(true);
+      tx.oncomplete = () => res(req.result);
       tx.onerror = () => rej(tx.error);
     });
   } catch (err) {
     console.error('Queue failed:', err);
-    return false;
+    return null;
   }
 };
 

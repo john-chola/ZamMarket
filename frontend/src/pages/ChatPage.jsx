@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  fetchMessages, addMessage, setTyping, setOnline,
+  fetchMessages, addMessage, removeMessage, setTyping, setOnline,
   setPendingCount, updateConversationPreview,
   sendMessageREST, clearMessages,
 } from '../store/slices/chatSlice';
@@ -112,6 +112,8 @@ export default function ChatPage() {
   const bottomRef    = useRef(null);
   const typingTimer  = useRef(null);
   const socketRef    = useRef(null);
+  const flushing     = useRef(false);   // one flush at a time, so nothing is sent twice
+  const flushRef     = useRef(null);
 
   // Load messages
   useEffect(() => {
@@ -124,8 +126,15 @@ export default function ChatPage() {
     const socket = initSocket(token);
     socketRef.current = socket;
 
-    socket.emit('join_conversation', conversationId);
-    socket.emit('mark_read', { conversationId });
+    // Runs now and after every reconnect: rejoin the room (or live messages stop
+    // arriving) and send anything queued while the connection was down
+    const onConnect = () => {
+      socket.emit('join_conversation', conversationId);
+      socket.emit('mark_read', { conversationId });
+      flushRef.current?.();
+    };
+    onConnect();
+    socket.on('connect', onConnect);
 
     socket.on('new_message', ({ message }) => {
       dispatch(addMessage(message));
@@ -141,6 +150,7 @@ export default function ChatPage() {
     });
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('new_message');
       socket.off('user_typing');
     };
@@ -148,20 +158,28 @@ export default function ChatPage() {
 
   // Flush offline queue
   const flushOfflineQueue = useCallback(async () => {
-    const queued = await getQueuedMessages();
-    if (queued.length === 0) return;
-    for (const item of queued) {
-      try {
-        await dispatch(sendMessageREST({
-          conversationId: item.conversationId,
-          text: item.text,
-        })).unwrap();
-        await dequeueMessage(item.id);
-      } catch { break; }
+    if (flushing.current || !navigator.onLine) return;
+    flushing.current = true;
+    try {
+      const queued = await getQueuedMessages();
+      for (const item of queued) {
+        try {
+          await dispatch(sendMessageREST({
+            conversationId: item.conversationId,
+            text: item.text,
+          })).unwrap();
+          await dequeueMessage(item.id);
+          // The sent message is now in the chat; drop its "queued" copy
+          dispatch(removeMessage(`offline_${item.id}`));
+        } catch { break; }
+      }
+      const remaining = await getQueuedMessages();
+      dispatch(setPendingCount(remaining.length));
+    } finally {
+      flushing.current = false;
     }
-    const remaining = await getQueuedMessages();
-    dispatch(setPendingCount(remaining.length));
   }, [dispatch]);
+  useEffect(() => { flushRef.current = flushOfflineQueue; }, [flushOfflineQueue]);
 
   // Online/offline detection
   useEffect(() => {
@@ -174,6 +192,7 @@ export default function ChatPage() {
     window.addEventListener('offline', handleOffline);
     dispatch(setOnline(navigator.onLine));
     getQueuedMessages().then((q) => dispatch(setPendingCount(q.length)));
+    flushOfflineQueue();   // anything left from an earlier visit
     return () => {
       window.removeEventListener('online',  handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -209,11 +228,11 @@ export default function ChatPage() {
       socket.emit('send_message', { conversationId, text: trimmed });
       socket.emit('typing', { conversationId, isTyping: false });
     } else {
-      await queueMessage(conversationId, trimmed);
+      const queueId = await queueMessage(conversationId, trimmed);
       const queued = await getQueuedMessages();
       dispatch(setPendingCount(queued.length));
       dispatch(addMessage({
-        _id: `offline_${Date.now()}`,
+        _id: `offline_${queueId ?? Date.now()}`,
         conversation: conversationId,
         sender: { _id: user._id || user.id, name: user.name },
         text: trimmed,
