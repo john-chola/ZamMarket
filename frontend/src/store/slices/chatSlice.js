@@ -86,6 +86,11 @@ const chatSlice = createSlice({
       }
     },
 
+    // Remove the on-screen "queued" copy once the real message has been sent
+    removeMessage(state, action) {
+      state.messages = state.messages.filter((m) => m._id !== action.payload);
+    },
+
     setTyping(state, action) { state.isTyping = action.payload; },
     setOnline(state, action) { state.isOnline = action.payload; },
     setPendingCount(state, action) { state.pendingCount = action.payload; },
@@ -132,7 +137,7 @@ const chatSlice = createSlice({
 });
 
 export const {
-  addMessage, updateConversationPreview, setTyping,
+  addMessage, removeMessage, updateConversationPreview, setTyping,
   setOnline, setPendingCount, clearError, clearMessages,
 } = chatSlice.actions;
 
